@@ -1,0 +1,3 @@
+pour la compilation :
+gcc assembler.c instruction_set.c parser.c -o assembler
+gcc simulateur.c -o simulateur
