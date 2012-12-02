@@ -213,6 +213,7 @@ Program *expand_macros(Program *prog, Labels *labels)
     }
     return prog;
 }
+
 void write_prog(Program *prog, FILE *file)
 {
     if(prog == NULL)
@@ -229,7 +230,7 @@ void write_prog(Program *prog, FILE *file)
         switch(prog->instr->op)
         {
         case MAKE:
-				word = prog->instr->args->num & (1<<8 - 1); /* Facultatif ? Sélectionne les 8 premiers bits seulement */
+				word = prog->instr->args->num;
 				break;
 
         case NOP:
@@ -256,9 +257,9 @@ void write_prog(Program *prog, FILE *file)
         case MOVE64:
         case COMP_GT:
         case COMP_LE:
-            word = prog->instr->args->num;
+            word = prog->instr->args->previous->num;
 				word <<= 4;
-				word += prog->instr->args->previous->num;
+				word += prog->instr->args->num;
 				break;
 
         case ADDI:
@@ -270,7 +271,7 @@ void write_prog(Program *prog, FILE *file)
             break;
 
         case JMP:
-				word = prog->instr->args->previous->num;
+				word = prog->instr->args->num;
             word <<= 4;
             break;
 
@@ -279,11 +280,26 @@ void write_prog(Program *prog, FILE *file)
 				break;
 
         case CALL:
-				word = (prog->instr->args->num) << 4;
+				word = prog->instr->args->num << 4;
 				break;
 
-        case MOVE16: //
-        case MOVE32: //
+        case MOVE16:
+				word = pos_get_code(prog->instr->args->previous->previous->previous->pos);
+				word <<= 1;
+				word += pos_get_code(prog->instr->args->previous->previous->pos);
+				word <<= 1;
+				word += prog->instr->args->previous->num;
+				word <<= 4;
+				word += prog->instr->args->num;
+				break;
+
+        case MOVE32:
+				word = pos_get_code(prog->instr->args->previous->previous->pos);
+				word <<= 2;
+				word += pos_get_code(prog->instr->args->previous->pos);
+				word <<= 4;
+				word += prog->instr->args->num;
+				break;
 
         case SETSR:
             word = prog->instr->args->num;
@@ -296,9 +312,11 @@ void write_prog(Program *prog, FILE *file)
             break;
 
         case POP:
-            //
-            //
-            //
+				word = prog->instr->args->previous->num;
+				word <<= 4;
+				word += pos_get_code(prog->instr->args->pos);
+            break;
+
         case RET:
             word = 0;
             break;
