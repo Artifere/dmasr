@@ -13,15 +13,12 @@ Mem *write_mem(Mem *mem, int address, int value)
             printf("error while allocating memory !\n");
             exit(1);
         }
-        //
-        //
-        //
+        mem->address = address; //??
     }
     if(mem->address == address)
     {
-        //
-        //
-        //
+        mem->value = value;
+        // ???... modifier l'adresse ?... Ou pas en fait
     }
     mem->next = write_mem(mem->next, address, value);
     return mem;
@@ -50,13 +47,21 @@ int cond_verified(int cond, int SR)
     {
     case 0x0:
         return !(SR & 0x1);
-    case 0x1://////
-    case 0x2://////
+
+    case 0x1:
+			return SR & 0x1;
+    case 0x2:
+			return
+
     case 0x3://////
     case 0x4://////
-    case 0x5://////
-    case 0x6://////
-    case 0x7://////
+    case 0x5:
+			return SR & 0x4;
+
+    case 0x6:
+			return SR & 0x8;
+    case 0x7:
+		return 1;
         break;
     }
 }
