@@ -51,15 +51,20 @@ int cond_verified(int cond, int SR)
     case 0x1:
 			return SR & 0x1;
     case 0x2:
-			return
+			return !(SR & 0x2) || (SR & 0x1);
 
-    case 0x3://////
-    case 0x4://////
+    case 0x3:
+			return (SR & 0x2) || (SR & 0x1);
+
+    case 0x4:
+			return (SR & 0x2) && !(SR & 0x1);
+
     case 0x5:
 			return SR & 0x4;
 
     case 0x6:
 			return SR & 0x8;
+
     case 0x7:
 		return 1;
         break;
@@ -73,15 +78,28 @@ int bits2int_4(int val)
 }
 int val8(int val, int pos)
 {
-    //
-    //
-    //
+    switch(pos)
+    {
+    case 0:
+        return val & 0xff;
+    case 1:
+        return (val >> 8) & 0xff;
+	 case 2:
+        return (val >> 16) & 0xff;
+    case 3:
+        return (val >> 24) & 0xff;
+    }
 }
 int set8(int val3, int val2, int val1, int val0)
 {
-    //
-    //
-    //
+    int ret = 0;
+    ret |= val3 & 0xff;
+    ret <<= 8;
+    ret |= val2 & 0xff;
+    ret <<= 8;
+    ret |= val1 & 0xff;
+    ret <<= 8;
+    ret |= val0 & 0xff;
 }
 int bits2int_16(int val)
 {
