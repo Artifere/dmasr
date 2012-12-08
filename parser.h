@@ -7,13 +7,11 @@ typedef struct Arguments {
   Pos pos;
   struct Arguments *previous;
 } Arguments;
-
 typedef struct Instruction {
   OpCode op;
   Cond cond;
   Arguments *args;
 } Instruction;
-
 typedef struct Program {
   enum {INSTRUCTION, DATA, LABEL} type;
   Instruction *instr;
@@ -21,7 +19,6 @@ typedef struct Program {
   char *label;
   struct Program *previous;
 } Program;
-
 Program *parse_line(char *line);
 Program *parse_program(FILE *file);
 void free_program(Program *prog);
