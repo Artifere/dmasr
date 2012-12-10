@@ -277,23 +277,24 @@ void write_prog(Program *prog, FILE *file)
 
         case GETSR:
 				word = prog->instr->args->num;
+				word <<= 4;
 				break;
 
         case CALL:
 				word = prog->instr->args->num << 4;
 				break;
 
-        case MOVE16:
+        case MOVE32:
 				word = pos_get_code(prog->instr->args->previous->previous->previous->pos);
 				word <<= 1;
 				word += pos_get_code(prog->instr->args->previous->previous->pos);
-				word <<= 1;
+				word <<= 2;
 				word += prog->instr->args->previous->num;
 				word <<= 4;
 				word += prog->instr->args->num;
 				break;
 
-        case MOVE32:
+        case MOVE16:
 				word = pos_get_code(prog->instr->args->previous->previous->pos);
 				word <<= 2;
 				word += pos_get_code(prog->instr->args->previous->pos);
