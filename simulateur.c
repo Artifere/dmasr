@@ -4,7 +4,7 @@
 #include <math.h>
 #include "simulateur.h"
 
-MMem *write_mem(Mem *mem, int address, int value)
+Mem *write_mem(Mem *mem, int address, int value)
 {
     if(mem == NULL)
     {
@@ -14,14 +14,14 @@ MMem *write_mem(Mem *mem, int address, int value)
             printf("error while allocating memory !\n");
             exit(1);
         }
-        mem->address = address; //??
+			mem->address = address;
+			mem->next = NULL;
     }
+
     if(mem->address == address)
-    {
         mem->value = value;
-        // ???... modifier l'adresse ?... Ou pas en fait
-    }
-    mem->next = write_mem(mem->next, address, value);
+    else
+		mem->next = write_mem(mem->next, address, value);
     return mem;
 }
 
@@ -53,20 +53,20 @@ int cond_verified(int cond, int SR)
 
     case 0x1:
 			return SR & 0x1;
+
     case 0x2:
-			return !(SR & 0x2) || (SR & 0x1);
+			return !(SR & 0x2);
 
     case 0x3:
 			return (SR & 0x2) || (SR & 0x1);
 
     case 0x4:
-			return (SR & 0x2) && !(SR & 0x1);
+			return SR & 0x2;
 
     case 0x5:
 			return SR & 0x4;
 
-    case 0x6: // Avant les trucs avec dépassements, ils étaient déjà mis mais plus là... Tu penses qu'il faut gérer
-    //le fait que ya des dépassements qui en sont en fait pas (complément à 2, toussa toussa) ?
+    case 0x6:
 			return SR & 0x8;
 
     case 0x7:
@@ -104,6 +104,8 @@ int set8(int val3, int val2, int val1, int val0)
     ret |= val1 & 0xff;
     ret <<= 8;
     ret |= val0 & 0xff;
+
+    return ret;
 }
 int bits2int_16(int val)
 {
@@ -163,16 +165,53 @@ void execute(State *s)
   switch((instr >> 11) & 0x1f)
     {
     case 0x0:
+		*AccL &= (0xffffffff - 0xff);
+		*AccL += val8(v01234567, pos_get_code(LL));
+		s->PC++;
+		break;
+
     case 0x1:
+    	s->PC++;
+    	break;
+
     case 0x2:
     case 0x3:
     case 0x4:
+    	*iH = *iH & *jH;
+    	*iL = *iL & *jL;
+    	s->SR = (s->SR & 0xe);
+    	if (!(*iL))
+			s->SR++;
+    	s->PC++;
+    	break;
+
     case 0x5:
+    	*iH = *iH | *jH;
+    	*iL = *iL | *jL;
+    	s->SR = (s->SR & 0xe);
+    	if (!(*iL))
+			s->SR++;
+    	s->PC++;
+    	break;
+
     case 0x6:
+    	*iH = *iH & *jH;
+    	*iL = *iL & *jL;
+    	s->SR = (s->SR & 0xe);
+    	if (!(*iL))
+			s->SR++;
+    	s->PC++;
+    	break;
+
     case 0x7:
-      //
-      //
-      //
+      *iH = !(*jH);
+      *iL = !(*jL);
+    	s->SR = (s->SR & 0xe);
+    	if (!(*iL))
+			s->SR++;
+    	s->PC++;
+    	break;
+
     case 0x8:
       *iH += sval;
       if((long long)*iL + (long long)sval > INT_MAX || (long long)*iL + (long long)sval < INT_MIN)
@@ -187,11 +226,13 @@ void execute(State *s)
       s->PC++;
       break;
     case 0x9:
+
     case 0xa:
     case 0xb:
     case 0xc:
     case 0xd:
-      //
+      s->PC += *iL;
+      break;
       //
       //
     case 0xe:
@@ -224,6 +265,15 @@ void execute(State *s)
     case 0x15:
     case 0x16:
     case 0x17:
+    	*iH = *jH;
+    	*iL = *jL;
+    	s->SR = (s->SR & 0xe);
+    	if (!(*jH) && !(*jL))
+			s->SR++;
+		s->PC++;
+		break;
+
+
     case 0x18:
     case 0x19:
     case 0x1a:

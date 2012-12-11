@@ -137,7 +137,6 @@ int check_arglist(OpCode op, Arguments *args)
 		exit(1);
 	}
 	}
-    }
 }
 void check_program_arglist(Program *prog)
 {
