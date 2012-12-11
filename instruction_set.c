@@ -100,9 +100,9 @@ ArgList opcode_get_arglist(OpCode code)
     case SHR:
         return ARGS_REG_REG;
     case LDR:
-        return ARGS_REG_LAB; // ????
+        return ARGS_REG_REG;
     case STR:
-        return ARGS_LAB_REG;
+        return ARGS_REG_REG;
     case JMP:
         return ARGS_REG;
     case ADDP16:
@@ -140,7 +140,7 @@ ArgList opcode_get_arglist(OpCode code)
     case RET:
         return ARGS_EMPTY;
     case CALL:
-        return ARGS_LAB;
+        return ARGS_REG;
 
     case MAKE16://////
     case MAKE32://////

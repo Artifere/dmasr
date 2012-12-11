@@ -117,7 +117,7 @@ int check_arglist(OpCode op, Arguments *args)
         // }
         //break;
     case ARGS_LAB:
-		if(args->type != IDENT) // A VOIR : IDENT <=> LAB ?
+		if(args->type != IDENT)
 	{
 		printf("%s needs label as first argument !\n", opcode_get_string(op));
 		exit(1);
@@ -131,7 +131,7 @@ int check_arglist(OpCode op, Arguments *args)
 	}
 		break;
     case ARGS_LAB_REG:
-		if(args->type != REG || args->previous->type != IDENT) // A VOIR : IDENT <=> LAB ?
+		if(args->type != REG || args->previous->type != IDENT)
 	{
 		printf("%s needs label as first argument and register as second argument !\n", opcode_get_string(op));
 		exit(1);
@@ -229,6 +229,7 @@ void write_prog(Program *prog, FILE *file)
       word <<= 3;
       word += cond_get_code(prog->instr->cond);
       fputc(word, file);
+      word = 0;
       switch(prog->instr->op)
 	{
 	case MAKE:
