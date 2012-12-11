@@ -11,33 +11,35 @@ int get_address(Labels *labels, char *label)
     return labels->address;
   return get_address(labels->next, label);
 }
+int count_out_lines(Program *prog)
+{
+  if(prog == NULL)
+    return 0;
+  if(prog->type == LABEL)
+    return count_out_lines(prog->previous);
+  if(prog->type == INSTRUCTION)
+    return count_out_lines(prog->previous) + opcode_get_expanded_size(prog->instr->op);
+  return count_out_lines(prog->previous) + 1;
+}
 Labels *populate_labels(Program *prog)
 {
-  static int address;
   if(prog == NULL)
-    {
-      address = 0;
-      return NULL;
-    }
+    return NULL;
   Labels *ret = populate_labels(prog->previous);
   if(prog->type == LABEL)
     {
       if(get_address(ret, prog->label) != -1)
-	{
-	  printf("Label defined twice: %s\n", prog->label);
-	  exit(1);
-	}
+        {
+          printf("Label defined twice: %s\n", prog->label);
+          exit(1);
+        }
       Labels *tmp = malloc(sizeof(Labels));
       tmp->label = malloc((strlen(prog->label) + 1) * sizeof(char));
       strcpy(tmp->label, prog->label);
-      tmp->address = address;
+      tmp->address = count_out_lines(prog);
       tmp->next = ret;
       ret = tmp;
     }
-  if(prog->type == INSTRUCTION)
-    address += opcode_get_expanded_size(prog->instr->op);
-  else if(prog->type == DATA)
-    address++;
   return ret;
 }
 int check_arglist(OpCode op, Arguments *args)
@@ -135,6 +137,7 @@ int check_arglist(OpCode op, Arguments *args)
 		exit(1);
 	}
 	}
+    }
 }
 void check_program_arglist(Program *prog)
 {
@@ -208,7 +211,7 @@ Program *expand_macros(Program *prog, Labels *labels)
 	  exit(1);
 	}
       prog = erase_line(prog);
-      prog = insert_prog(prog, make32(address - count_lines(prog) - opcode_get_expanded_size(JUMP)));
+      prog = insert_prog(prog, make32(address - count_out_lines(prog) - opcode_get_expanded_size(JUMP) + 1));
       prog = insert_line(prog, "JMP NC $0");
       break;
     }

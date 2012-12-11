@@ -1,3 +1,13 @@
 pour la compilation :
 gcc assembler.c instruction_set.c parser.c -o assembler
-gcc simulateur.c -o simulateur
+gcc simulateur_gui.c simulateur.c -o simulateur $(pkg-config --cflags --libs gtk+-3.0)
+
+La compilation du simulateur requiert les librairies de développement de gtk et pkg-config. Sur ubuntu ce sont les paquets suivants :
+libgtk-3-dev pkg-config
+
+Utilisation du simulateur :
+Le fichier à simuler peut être donné en argument lors du lancement du programme, ou bien il peut être ouvert ensuite par l'interface graphique
+Le bouton "open" permet d'ouvrir un fichier compilé avec l'assembleur
+Le bouton "reset" remet à zéro les registres, vide la mémoire, et recharge en mémoire le fichier ouvert (s'il y en a un)
+Le bouton "step" permet de simuler le nombre de pas de calcul correspondant à la valeur de la case juste à gauche du bouton
+Le bouton "add" permet d'ajouter une addresse ou une plage d'addresses mémoire à observer. les valeurs "start" et "end" peuvent être données en décimal ou en hexadécimal (avec le préfixe "0x"). Si "end" <= "start" alors seule la case mémoire "start" est ajoutée, sinon la plage mémoire de "start" à "end" (inclus) est ajoutée. Le bouton "remove" permet de supprimer une adresse ou une plage d'adresses (suivant le type d'ajout) de la liste
