@@ -166,7 +166,7 @@ void execute(State *s)
     {
     case 0x0:
 		*AccL &= (0xffffffff - 0xff);
-		*AccL += val8(v01234567, pos_get_code(LL));
+		*AccL += val8(v01234567, pos_get_code(POS_LL));
 		s->PC++;
 		break;
 
@@ -175,66 +175,122 @@ void execute(State *s)
     	break;
 
     case 0x2:
+        if((long long)*iL + (long long)jL > INT_MAX || (long long)*iL + (long long)jL < INT_MIN)
+            s->SR |= 0x8;
+        if((long long)(unsigned)*iL + (long long)(unsigned)jL > INT_MAX)
+            s->SR |= 0x4;
+        *iH = *iH + *jH;
+        *iL = *iL + *jL;
+        if (*iL == 0)
+          s->SR |= 0x1;
+        if (*iL < 0)
+          s->SR |= 0x2;
+        s->PC++;
+        break;
+
     case 0x3:
+        if((long long)*iL - (long long)jL > INT_MAX || (long long)*iL - (long long)jL < INT_MIN)
+            s->SR |= 0x8;
+        if((long long)(unsigned)*iL - (long long)(unsigned)jL > INT_MAX) //comment peut on avoir une retenue en faisant
+                                                                         //une soustraction d'entiers non signés ?
+            s->SR |= 0x4;
+        *iH = *iH - *jH;
+        *iL = *iL - *jL;
+        if (*iL == 0)
+          s->SR |= 0x1;
+        if (*iL < 0)
+          s->SR |= 0x2;
+        s->PC++;
+        break;
+
     case 0x4:
     	*iH = *iH & *jH;
     	*iL = *iL & *jL;
-    	s->SR = (s->SR & 0xe);
-    	if (!(*iL))
-			s->SR++;
+    	if (!(iL))
+    	   s->SR |= 0x1;
     	s->PC++;
     	break;
 
     case 0x5:
     	*iH = *iH | *jH;
     	*iL = *iL | *jL;
-    	s->SR = (s->SR & 0xe);
-    	if (!(*iL))
-			s->SR++;
+    	if (!(iL))
+    	   s->SR |= 0x1;
     	s->PC++;
     	break;
 
     case 0x6:
     	*iH = *iH & *jH;
     	*iL = *iL & *jL;
-    	s->SR = (s->SR & 0xe);
-    	if (!(*iL))
-			s->SR++;
+    	if (!(iL))
+    	   s->SR |= 0x1;
     	s->PC++;
     	break;
 
     case 0x7:
       *iH = !(*jH);
       *iL = !(*jL);
-    	s->SR = (s->SR & 0xe);
-    	if (!(*iL))
-			s->SR++;
+        if (!(iL))
+    	   s->SR |= 0x1;
     	s->PC++;
     	break;
 
     case 0x8:
       *iH += sval;
       if((long long)*iL + (long long)sval > INT_MAX || (long long)*iL + (long long)sval < INT_MIN)
-	s->SR |= 0x8;
+        s->SR |= 0x8;
       if((long long)(unsigned)*iL + (long long)(unsigned)sval > INT_MAX)
-	s->SR |= 0x4;
+        s->SR |= 0x4;
       *iL += sval;
       if(*iL == 0)
-	s->SR |= 0x1;
+        s->SR |= 0x1;
       if(*iL < 0)
-	s->SR |= 0x2;
+        s->SR |= 0x2;
       s->PC++;
       break;
+
     case 0x9:
+        if ( ((*iL)<<((unsigned) *jL))>>((unsigned) *jL) != *iL || ((*iL)<<((unsigned) *jL))>>((unsigned) *jL) != *iL)
+            s->SR |= 0x4;
+        *iL = (*iL) << ((unsigned) *jL);
+        *iH = (*iH) << ((unsigned) *jH);
+        if (*iL == 0)
+            s->SR |= 0x1;
+        s->PC++;
+        break;
 
     case 0xa:
+        if ( ((*iL)>>((unsigned) *jL))<<((unsigned) *jL) != *iL || ((*iL)>>((unsigned) *jL))<<((unsigned) *jL) != *iL)
+            s->SR |= 0x4;
+        *iL = (*iL) >> ((unsigned) *jL);
+        *iH = (*iH) >> ((unsigned) *jH);
+        if (*iL == 0)
+            s->SR |= 0x1;
+        s->PC++;
+        break;
+
     case 0xb:
+        write_mem(s->Mem, *jL , val16(*iL, 1)); //est-ce qu'on modifie s->mem ? après on pourra plus revenir au début
+        write_mem(s->Mem, *jL +1 , val16(*iL, 0));
+        write_mem(s->Mem, *jL +2, val16(*iH, 1));
+        write_mem(s->Mem, *jL +3, val16(*iH, 0));
+        if (*iL == 0)
+            s->SR |= 0x1;
+        s->PC++;
+        break;
+
     case 0xc:
+        *jL = set16(read_mem(s->Mem, *iL), read_mem(s->Mem, *iL+1)); //est-ce qu'on modifie s->mem ?
+        *jH = set16(read_mem(s->Mem, *iL+2), read_mem(s->Mem, *iL+3));
+        if (*jL == 0)
+            s->SR |= 0x1;
+        s->PC++;
+        break;
+
     case 0xd:
       s->PC += *iL;
       break;
-      //
-      //
+
     case 0xe:
       valHL = bits2int_16(val16(*jH, 1)) + bits2int_16(val16(*jH, 0)) + bits2int_16(val16(*jL, 1)) + bits2int_16(val16(*jL, 0));
       valLL = bits2int_16(val16(*iH, 1)) + bits2int_16(val16(*iH, 0)) + bits2int_16(val16(*iL, 1)) + bits2int_16(val16(*iL, 0));
@@ -256,9 +312,133 @@ void execute(State *s)
       *iL = set16(val16(*iL, 1), int2bits_16(valLL));
       s->PC++;
       break;
+
     case 0xf:
+      valLL = bits2int_16(val16(*iL, 0)) - bits2int_16(val16(*jL, 0));
+      valLH = bits2int_16(val16(*iL, 1)) - bits2int_16(val16(*jL, 1));
+      valHL = bits2int_16(val16(*iH, 0)) - bits2int_16(val16(*jH, 0));
+      valHH = bits2int_16(val16(*iH, 1)) - bits2int_16(val16(*jH, 1));
+      if(valLL > 0x7fff || valLL < -0x7fff || valLH > 0x7fff || valLH < -0x7fff
+         ||valHL > 0x7fff || valHL < -0x7fff || valHH > 0x7fff || valHH < -0x7fff)
+	s->SR |= 0x8;
+      if(valLL == 0 && valLH == 0)
+	s->SR |= 0x1;
+      if(valLL < 0 && valLH <0)
+	s->SR |= 0x2;
+
+      if(valLL > 0x7fff)
+	valLL = 0x7fff;
+      if(valLL < -0x7fff)
+	valLL = -0x7fff;
+      if(valLH > 0x7fff)
+	valLH = 0x7fff;
+      if(valLH < -0x7fff)
+	valLH = -0x7fff;
+	  if(valHL > 0x7fff)
+	valHL = 0x7fff;
+      if(valHL < -0x7fff)
+	valHL = -0x7fff;
+      if(valHH > 0x7fff)
+	valHH = 0x7fff;
+      if(valHH < -0x7fff)
+	valHH = -0x7fff;
+
+      *iH = set16(int2bits_16(valHH), int2bits_16(valHL));
+      *iL = set16(int2bits_16(valLH), int2bits_16(valLL));
+      s->PC++;
+
     case 0x10:
+      valLLL = bits2int_8(val8(*iL, 0)) + bits2int_8(val8(*jL, 0)); //pas de bits2int_8, est-ce que c'est bits2int_4 ou rien du tout ?
+      valLLH = bits2int_8(val8(*iL, 1)) + bits2int_8(val8(*jL, 1));
+      valLHL = bits2int_8(val8(*iL, 2)) + bits2int_8(val8(*jL, 2));
+      valLHH = bits2int_8(val8(*iL, 3)) + bits2int_8(val8(*jL, 3));
+      valHLL = bits2int_8(val8(*iH, 0)) + bits2int_8(val8(*jH, 0));
+      valHLH = bits2int_8(val8(*iH, 1)) + bits2int_8(val8(*jH, 1));
+      valHHL = bits2int_8(val8(*iH, 2)) + bits2int_8(val8(*jH, 2));
+      valHHH = bits2int_8(val8(*iH, 3)) + bits2int_8(val8(*jH, 3));
+
+
+      if(valLLL > 0x7fff || valLLL < -0x7fff || valLLH > 0x7fff || valLLH < -0x7fff
+         ||valLHL > 0x7fff || valLHL < -0x7fff || valLHH > 0x7fff || valLHH < -0x7fff
+         ||valHLL > 0x7fff || valHLL < -0x7fff || valHLH > 0x7fff || valHLH < -0x7fff
+         ||valHHL > 0x7fff || valHHL < -0x7fff || valHHH > 0x7fff || valHHH < -0x7fff)
+	s->SR |= 0x8;
+
+      if(valLLL == 0 && valLLH == 0 && valLHL == 0 && valHH == 0)
+	s->SR |= 0x1;
+
+      if(valLLL > 0x7fff)
+	valLLL = 0x7fff;
+      if(valLLL < -0x7fff)
+	valLLL = -0x7fff;
+      if(valLLH > 0x7fff)
+	valLLH = 0x7fff;
+      if(valLLH < -0x7fff)
+	valLLH = -0x7fff;
+	  if(valLHL > 0x7fff)
+	valLHL = 0x7fff;
+      if(valLHL < -0x7fff)
+	valLHL = -0x7fff;
+      if(valLHH > 0x7fff)
+	valLHH = 0x7fff;
+      if(valLHH < -0x7fff)
+	valLHH = -0x7fff;
+	if(valHLL > 0x7fff)
+	valHLL = 0x7fff;
+      if(valHLL < -0x7fff)
+	valHLL = -0x7fff;
+      if(valHLH > 0x7fff)
+	valHLH = 0x7fff;
+      if(valHLH < -0x7fff)
+	valHLH = -0x7fff;
+	  if(valHHL > 0x7fff)
+	valHHL = 0x7fff;
+      if(valHHL < -0x7fff)
+	valHHL = -0x7fff;
+      if(valHHH > 0x7fff)
+	valHHH = 0x7fff;
+      if(valHHH < -0x7fff)
+	valHHH = -0x7fff;
+
+      *iH = set8(int2bits_8(valHHH), int2bits_8(valHHL),int2bits_8(valHLH), int2bits_8(valHLL));
+      *iL = set8(int2bits_8(valLHH), int2bits_8(valLHL),int2bits_8(valLLH), int2bits_8(valLLL));
+      s->PC++;
+
+
     case 0x11:
+      valLL = bits2int_16(val16(*iL, 0)) + bits2int_16(val16(*jL, 0));
+      valLH = bits2int_16(val16(*iL, 1)) + bits2int_16(val16(*jL, 1));
+      valHL = bits2int_16(val16(*iH, 0)) + bits2int_16(val16(*jH, 0));
+      valHH = bits2int_16(val16(*iH, 1)) + bits2int_16(val16(*jH, 1));
+      if(valLL > 0x7fff || valLL < -0x7fff || valLH > 0x7fff || valLH < -0x7fff
+         ||valHL > 0x7fff || valHL < -0x7fff || valHH > 0x7fff || valHH < -0x7fff)
+	s->SR |= 0x8;
+      if(valLL == 0 && valLH == 0)
+	s->SR |= 0x1;
+      if(valLL < 0 && valLH <0)
+	s->SR |= 0x2;
+
+      if(valLL > 0x7fff)
+	valLL = 0x7fff;
+      if(valLL < -0x7fff)
+	valLL = -0x7fff;
+      if(valLH > 0x7fff)
+	valLH = 0x7fff;
+      if(valLH < -0x7fff)
+	valLH = -0x7fff;
+	  if(valHL > 0x7fff)
+	valHL = 0x7fff;
+      if(valHL < -0x7fff)
+	valHL = -0x7fff;
+      if(valHH > 0x7fff)
+	valHH = 0x7fff;
+      if(valHH < -0x7fff)
+	valHH = -0x7fff;
+
+      *iH = set16(int2bits_16(valHH), int2bits_16(valHL));
+      *iL = set16(int2bits_16(valLH), int2bits_16(valLL));
+      s->PC++;
+
     case 0x12:
     case 0x13:
     case 0x14:
