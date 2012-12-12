@@ -77,7 +77,7 @@ int cond_verified(int cond, int SR)
 int bits2int_4(int val)
 {
   if(val & 0x8)
-    return (val & 0x7) | 0x80000000;
+    return val | 0xfffffff0;
   return val;
 }
 int val8(int val, int pos)
@@ -300,7 +300,7 @@ void execute(State *s)
 	s->SR |= 0x1;
       if(valLL < 0)
 	s->SR |= 0x2;
-      if(valHL > 0x7fff)
+      if(valHL > 0x7fff) //ca devrait pas aller de 0x7fff à -0x8000 ? (-2^n à 2^n -1 ?)
 	valHL = 0x7fff;
       if(valHL < -0x7fff)
 	valHL = -0x7fff;
@@ -346,64 +346,65 @@ void execute(State *s)
       *iH = set16(int2bits_16(valHH), int2bits_16(valHL));
       *iL = set16(int2bits_16(valLH), int2bits_16(valLL));
       s->PC++;
+      break;
 
     case 0x10:
-      valLLL = bits2int_8(val8(*iL, 0)) + bits2int_8(val8(*jL, 0)); //pas de bits2int_8, est-ce que c'est bits2int_4 ou rien du tout ?
-      valLLH = bits2int_8(val8(*iL, 1)) + bits2int_8(val8(*jL, 1));
-      valLHL = bits2int_8(val8(*iL, 2)) + bits2int_8(val8(*jL, 2));
-      valLHH = bits2int_8(val8(*iL, 3)) + bits2int_8(val8(*jL, 3));
-      valHLL = bits2int_8(val8(*iH, 0)) + bits2int_8(val8(*jH, 0));
-      valHLH = bits2int_8(val8(*iH, 1)) + bits2int_8(val8(*jH, 1));
-      valHHL = bits2int_8(val8(*iH, 2)) + bits2int_8(val8(*jH, 2));
-      valHHH = bits2int_8(val8(*iH, 3)) + bits2int_8(val8(*jH, 3));
+      valLLL = val8(*iL, 0) + val8(*jL, 0); //pas de bits2int_8, est-ce que c'est bits2int_4 ou rien du tout ?
+      valLLH = val8(*iL, 1) + val8(*jL, 1); //à supprimer les bits2int_8 et remplacer par des mod 2^8 non ?
+      valLHL = val8(*iL, 2) + val8(*jL, 2);
+      valLHH = val8(*iL, 3) + val8(*jL, 3);
+      valHLL = val8(*iH, 0) + val8(*jH, 0);
+      valHLH = val8(*iH, 1) + val8(*jH, 1);
+      valHHL = val8(*iH, 2) + val8(*jH, 2);
+      valHHH = val8(*iH, 3) + val8(*jH, 3);
 
 
-      if(valLLL > 0x7fff || valLLL < -0x7fff || valLLH > 0x7fff || valLLH < -0x7fff
-         ||valLHL > 0x7fff || valLHL < -0x7fff || valLHH > 0x7fff || valLHH < -0x7fff
-         ||valHLL > 0x7fff || valHLL < -0x7fff || valHLH > 0x7fff || valHLH < -0x7fff
-         ||valHHL > 0x7fff || valHHL < -0x7fff || valHHH > 0x7fff || valHHH < -0x7fff)
+      if(valLLL > 0x7f || valLLL < -0x7f || valLLH > 0x7f || valLLH < -0x7f
+         ||valLHL > 0x7f || valLHL < -0x7f || valLHH > 0x7f || valLHH < -0x7f
+         ||valHLL > 0x7f || valHLL < -0x7f || valHLH > 0x7f || valHLH < -0x7f
+         ||valHHL > 0x7f || valHHL < -0x7f || valHHH > 0x7f || valHHH < -0x7f)
 	s->SR |= 0x8;
 
       if(valLLL == 0 && valLLH == 0 && valLHL == 0 && valHH == 0)
 	s->SR |= 0x1;
 
-      if(valLLL > 0x7fff)
-	valLLL = 0x7fff;
-      if(valLLL < -0x7fff)
-	valLLL = -0x7fff;
-      if(valLLH > 0x7fff)
-	valLLH = 0x7fff;
-      if(valLLH < -0x7fff)
-	valLLH = -0x7fff;
-	  if(valLHL > 0x7fff)
-	valLHL = 0x7fff;
-      if(valLHL < -0x7fff)
-	valLHL = -0x7fff;
-      if(valLHH > 0x7fff)
-	valLHH = 0x7fff;
-      if(valLHH < -0x7fff)
-	valLHH = -0x7fff;
-	if(valHLL > 0x7fff)
-	valHLL = 0x7fff;
-      if(valHLL < -0x7fff)
-	valHLL = -0x7fff;
-      if(valHLH > 0x7fff)
-	valHLH = 0x7fff;
-      if(valHLH < -0x7fff)
-	valHLH = -0x7fff;
-	  if(valHHL > 0x7fff)
-	valHHL = 0x7fff;
-      if(valHHL < -0x7fff)
-	valHHL = -0x7fff;
-      if(valHHH > 0x7fff)
-	valHHH = 0x7fff;
-      if(valHHH < -0x7fff)
-	valHHH = -0x7fff;
+      if(valLLL > 0x7f)
+	valLLL = 0x7f;
+      if(valLLL < -0x7f)
+	valLLL = -0x7f;
+      if(valLLH > 0x7f)
+	valLLH = 0x7f;
+      if(valLLH < -0x7f)
+	valLLH = -0x7f;
+	  if(valLHL > 0x7f)
+	valLHL = 0x7f;
+      if(valLHL < -0x7f)
+	valLHL = -0x7f;
+      if(valLHH > 0x7f)
+	valLHH = 0x7f;
+      if(valLHH < -0x7f)
+	valLHH = -0x7f;
+	if(valHLL > 0x7f)
+	valHLL = 0x7f;
+      if(valHLL < -0x7f)
+	valHLL = -0x7f;
+      if(valHLH > 0x7f)
+	valHLH = 0x7f;
+      if(valHLH < -0x7f)
+	valHLH = -0x7f;
+	  if(valHHL > 0x7f)
+	valHHL = 0x7f;
+      if(valHHL < -0x7f)
+	valHHL = -0x7f;
+      if(valHHH > 0x7f)
+	valHHH = 0x7f;
+      if(valHHH < -0x7f)
+	valHHH = -0x7f;
 
-      *iH = set8(int2bits_8(valHHH), int2bits_8(valHHL),int2bits_8(valHLH), int2bits_8(valHLL));
-      *iL = set8(int2bits_8(valLHH), int2bits_8(valLHL),int2bits_8(valLLH), int2bits_8(valLLL));
+      *iH = set8(valHHH, valHHL,valHLH, valHLL);
+      *iL = set8(valLHH, alLHL,valLLH, valLLL);
       s->PC++;
-
+        break;
 
     case 0x11:
       valLL = bits2int_16(val16(*iL, 0)) + bits2int_16(val16(*jL, 0));
@@ -438,18 +439,216 @@ void execute(State *s)
       *iH = set16(int2bits_16(valHH), int2bits_16(valHL));
       *iL = set16(int2bits_16(valLH), int2bits_16(valLL));
       s->PC++;
+      break;
 
     case 0x12:
+      valLL = bits2int_16(val16(*iL, 0)) * bits2int_16(val16(*jL, 0)); //ça sert à quoi les bits2int_16 ?
+      valLH = bits2int_16(val16(*iL, 1)) * bits2int_16(val16(*jL, 1));
+      valHL = bits2int_16(val16(*iH, 0)) * bits2int_16(val16(*jH, 0));
+      valHH = bits2int_16(val16(*iH, 1)) * bits2int_16(val16(*jH, 1));
+      if(valLL > 0x7fff || valLL < -0x7fff || valLH > 0x7fff || valLH < -0x7fff
+         ||valHL > 0x7fff || valHL < -0x7fff || valHH > 0x7fff || valHH < -0x7fff)
+	s->SR |= 0x8;
+      if(valLL == 0 && valLH == 0)
+	s->SR |= 0x1;
+      if(valLL < 0 && valLH <0)
+	s->SR |= 0x2;
+
+      if(valLL > 0x7fff)
+	valLL = 0x7fff;
+      if(valLL < -0x7fff)
+	valLL = -0x7fff;
+      if(valLH > 0x7fff)
+	valLH = 0x7fff;
+      if(valLH < -0x7fff)
+	valLH = -0x7fff;
+	  if(valHL > 0x7fff)
+	valHL = 0x7fff;
+      if(valHL < -0x7fff)
+	valHL = -0x7fff;
+      if(valHH > 0x7fff)
+	valHH = 0x7fff;
+      if(valHH < -0x7fff)
+	valHH = -0x7fff;
+
+      *iH = set16(int2bits_16(valHH), int2bits_16(valHL));
+      *iL = set16(int2bits_16(valLH), int2bits_16(valLL));
+      s->PC++;
+      break;
+
     case 0x13:
+    valLL = bits2int_16(val16(*iL, 0)) + bits2int_16(val16(*iL, 1)) + bits2int_16(val16(*jL, 0)) + bits2int_16(val16(*jL, 1));
+    valHL = bits2int_16(val16(*iH, 0)) + bits2int_16(val16(*iH, 1)) + bits2int_16(val16(*jH, 0)) + bits2int_16(val16(*jH, 1));
+
+    if (valHL > 0x7fff || valHL < -0x7fff || valLL > 0x7fff || valLL < -0x7fff)
+        s->SR |= 0x8;
+    if(valLL == 0)
+        s->SR |= 0x1;
+    if(valLL < 0)
+        s->SR |= 0x2;
+    if(valHL > 0x7fff)
+        valHL = 0x7fff;
+    if(valHL < -0x7fff)
+        valHL = -0x7fff;
+    if(valLL > 0x7fff)
+        valLL = 0x7fff;
+    if(valLL < -0x7fff)
+        valLL = -0x7fff;
+
+      *iH = set16(val16(*iH, 1), int2bits_16(valHL));
+      *iL = set16(val16(*iL, 1), int2bits_16(valLL));
+      s->PC++;
+      break;
+
+
     case 0x14:
+      valLLL = val8(*iL, 0) - val8(*jL, 0);
+      valLLH = val8(*iL, 1) - val8(*jL, 1);
+      valLHL = val8(*iL, 2) - val8(*jL, 2);
+      valLHH = val8(*iL, 3) - val8(*jL, 3);
+      valHLL = val8(*iH, 0) - val8(*jH, 0);
+      valHLH = val8(*iH, 1) - val8(*jH, 1);
+      valHHL = val8(*iH, 2) - val8(*jH, 2);
+      valHHH = val8(*iH, 3) - val8(*jH, 3);
+
+
+      if(valLLL > 0x7f || valLLL < -0x7f || valLLH > 0x7f || valLLH < -0x7f
+         ||valLHL > 0x7f || valLHL < -0x7f || valLHH > 0x7f || valLHH < -0x7f
+         ||valHLL > 0x7f || valHLL < -0x7f || valHLH > 0x7f || valHLH < -0x7f
+         ||valHHL > 0x7f || valHHL < -0x7f || valHHH > 0x7f || valHHH < -0x7f)
+	s->SR |= 0x8;
+
+      if(valLLL == 0 && valLLH == 0 && valLHL == 0 && valHH == 0)
+	s->SR |= 0x1;
+
+      if(valLLL > 0x7f)
+	valLLL = 0x7f;
+      if(valLLL < -0x7f)
+	valLLL = -0x7f;
+      if(valLLH > 0x7f)
+	valLLH = 0x7f;
+      if(valLLH < -0x7f)
+	valLLH = -0x7f;
+	  if(valLHL > 0x7f)
+	valLHL = 0x7f;
+      if(valLHL < -0x7f)
+	valLHL = -0x7f;
+      if(valLHH > 0x7f)
+	valLHH = 0x7f;
+      if(valLHH < -0x7f)
+	valLHH = -0x7f;
+	if(valHLL > 0x7f)
+	valHLL = 0x7f;
+      if(valHLL < -0x7f)
+	valHLL = -0x7f;
+      if(valHLH > 0x7f)
+	valHLH = 0x7f;
+      if(valHLH < -0x7f)
+	valHLH = -0x7f;
+	  if(valHHL > 0x7f)
+	valHHL = 0x7f;
+      if(valHHL < -0x7f)
+	valHHL = -0x7f;
+      if(valHHH > 0x7f)
+	valHHH = 0x7f;
+      if(valHHH < -0x7f)
+	valHHH = -0x7f;
+
+      *iH = set8(valHHH, valHHL,valHLH, valHLL);
+      *iL = set8(valLHH, alLHL,valLLH, valLLL);
+      s->PC++;
+        break;
+
+
     case 0x15:
+        if (v67 == 0)
+        {
+            if (v45 == 0)
+                *AccL = set8(val8(AccL,1), val8(*jL, 0));
+            if (v45 == 1)
+                *AccL = set8(val8(AccL,1), val8(*jL, 1));
+            if (v45 == 2)
+                *AccL = set8(val8(AccL,1), val8(*jH, 0));
+            if (v45 == 3)
+                *AccL = set8(val8(AccL,1), val8(*jH, 1));
+            if (val8(*AccL, 0)==0)
+            s->SR |= 0x1;
+        };
+
+        if (v67 == 1)
+        {
+            if (v45 == 0)
+                *AccL = set8(val8(*jL, 0), val8(AccL,0));
+            if (v45 == 1)
+                *AccL = set8(val8(*jL, 1), val8(AccL,0));
+            if (v45 == 2)
+                *AccL = set8(val8(*jH, 0), val8(AccL,0));
+            if (v45 == 3)
+                *AccL = set8(val8(*jH, 1), val8(AccL,0));
+            if (val8(*AccL, 1)==0)
+            s->SR |= 0x1;
+        };
+
+        if (v67 == 2)
+        {
+            if (v45 == 0)
+                *AccH = set8(val8(AccH,1), val8(*jL, 0));
+            if (v45 == 1)
+                *AccH = set8(val8(AccH,1), val8(*jL, 1));
+            if (v45 == 2)
+                *AccH = set8(val8(AccH,1), val8(*jH, 0));
+            if (v45 == 3)
+                *AccH = set8(val8(AccH,1), val8(*jH, 1));
+            if (val8(*AccH, 0)==0)
+            s->SR |= 0x1;
+        };
+
+        if (v67 == 3)
+        {
+            if (v45 == 0)
+                *AccH = set8(val8(*jL, 0), val8(AccH,0));
+            if (v45 == 1)
+                *AccH = set8(val8(*jL, 1), val8(AccH,0));
+            if (v45 == 2)
+                *AccH = set8(val8(*jH, 0), val8(AccH,0));
+            if (v45 == 3)
+                *AccH = set8(val8(*jH, 1), val8(AccH,0));
+            if (val8(*AccH, 1)==0)
+            s->SR |= 0x1;
+        };
+        s->PC++;
+        break;
+
     case 0x16:
+        if (v7 == 0)
+        {
+            if (v6 == 0)
+            *i2L = *jL;
+            if (v6 == 1)
+            *i2L = *jH;
+            if (*i2L == 0)
+            s->SR |= 0x1;
+        };
+
+        if (v7 == 1)
+        {
+            if (v6 == 0)
+            *i2H = *jL;
+            if (v6 == 1)
+            *i2H = *jH;
+            if (*i2H == 0)
+            s->SR |= 0x1;
+        };
+
+        s->PC++;
+        break;
+
     case 0x17:
     	*iH = *jH;
     	*iL = *jL;
-    	s->SR = (s->SR & 0xe);
+    	s->SR = (s->SR & 0xe); //ça ça remet le premier bit des drapeaux à 0 non ? pourquoi ? j'croyais qu'on les baissait pas
     	if (!(*jH) && !(*jL))
-			s->SR++;
+			s->SR++; //et là on rajoute 1 alors qu'il est peut être déjà levé...
 		s->PC++;
 		break;
 
