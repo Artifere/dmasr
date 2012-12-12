@@ -192,7 +192,7 @@ void execute(State *s)
         if((long long)*iL - (long long)jL > INT_MAX || (long long)*iL - (long long)jL < INT_MIN)
             s->SR |= 0x8;
         if((long long)(unsigned)*iL - (long long)(unsigned)jL > INT_MAX) //comment peut on avoir une retenue en faisant
-                                                                         //une soustraction d'entiers non signés ?
+                                                                         //une soustraction d'entiers non signÃ©s ?
             s->SR |= 0x4;
         *iH = *iH - *jH;
         *iL = *iL - *jL;
@@ -270,8 +270,8 @@ void execute(State *s)
         break;
 
     case 0xb:
-        write_mem(s->Mem, *jL , val16(*iL, 1)); //est-ce qu'on modifie s->mem ? après on pourra plus revenir au début
-        write_mem(s->Mem, *jL +1 , val16(*iL, 0));
+        write_mem(s->Mem, *jL , val16(*iL, 1)); //est-ce qu'on modifie s->mem ? aprÃ¨s on pourra plus revenir au dÃ©but
+        write_mem(s->Mem, *jL +1 , val16(*iL, 0));//si on fait Mem = writeblabla, Ã§a marchera comme il faut je crois me souvenir :p Je checke demain
         write_mem(s->Mem, *jL +2, val16(*iH, 1));
         write_mem(s->Mem, *jL +3, val16(*iH, 0));
         if (*iL == 0)
@@ -573,9 +573,9 @@ void execute(State *s)
                 *AccL = set8(val8(AccL,1), val8(*jH, 1));
             if (val8(*AccL, 0)==0)
             s->SR |= 0x1;
-        };
+        }
 
-        if (v67 == 1)
+        else if (v67 == 1)
         {
             if (v45 == 0)
                 *AccL = set8(val8(*jL, 0), val8(AccL,0));
@@ -587,9 +587,9 @@ void execute(State *s)
                 *AccL = set8(val8(*jH, 1), val8(AccL,0));
             if (val8(*AccL, 1)==0)
             s->SR |= 0x1;
-        };
+        }
 
-        if (v67 == 2)
+        else if (v67 == 2)
         {
             if (v45 == 0)
                 *AccH = set8(val8(AccH,1), val8(*jL, 0));
@@ -601,9 +601,9 @@ void execute(State *s)
                 *AccH = set8(val8(AccH,1), val8(*jH, 1));
             if (val8(*AccH, 0)==0)
             s->SR |= 0x1;
-        };
+        }
 
-        if (v67 == 3)
+        else if (v67 == 3)
         {
             if (v45 == 0)
                 *AccH = set8(val8(*jL, 0), val8(AccH,0));
@@ -615,7 +615,12 @@ void execute(State *s)
                 *AccH = set8(val8(*jH, 1), val8(AccH,0));
             if (val8(*AccH, 1)==0)
             s->SR |= 0x1;
-        };
+        }
+        else
+        {
+				printf("Probleme\n");
+				exit(17);
+        }
         s->PC++;
         break;
 
@@ -628,9 +633,9 @@ void execute(State *s)
             *i2L = *jH;
             if (*i2L == 0)
             s->SR |= 0x1;
-        };
+        }
 
-        if (v7 == 1)
+        else if (v7 == 1)
         {
             if (v6 == 0)
             *i2H = *jL;
@@ -638,23 +643,40 @@ void execute(State *s)
             *i2H = *jH;
             if (*i2H == 0)
             s->SR |= 0x1;
-        };
+        }
 
+        else
+		  {
+				printf("Probleme\n");
+				exit(17);
+        }
         s->PC++;
         break;
 
     case 0x17:
     	*iH = *jH;
     	*iL = *jL;
-    	s->SR = (s->SR & 0xe); //ça ça remet le premier bit des drapeaux à 0 non ? pourquoi ? j'croyais qu'on les baissait pas
+    	//s->SR = (s->SR & 0xe); //ça ça remet le premier bit des drapeaux à 0 non ? pourquoi ? j'croyais qu'on les baissait pas
     	if (!(*jH) && !(*jL))
-			s->SR++; //et là on rajoute 1 alors qu'il est peut être déjà levé...
+			s->SR |= 0x1;
+			//s->SR++; //et là on rajoute 1 alors qu'il est peut être déjà levé...
 		s->PC++;
 		break;
 
 
     case 0x18:
+    	valLLL = (s->SR & 0xfffffff0); // Je pense que c'est bon, mais Ã  checker
+    	*iL = *iL & (0xfffffff0);
+    	*il |= valLLL;
+    	s->PC++;
+    	break;
+
     case 0x19:
+    	valLLL = (*jL) & 0xfffffff0;
+    	s->SR = valLLL;
+    	s->PC++;
+    	break;
+
     case 0x1a:
     case 0x1b:
       //
