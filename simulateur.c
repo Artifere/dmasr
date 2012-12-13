@@ -116,7 +116,7 @@ int bits2int_16(int val)
 int int2bits_16(int val)
 {
   if(val < 0)
-    return (-val) & 0x8000;
+    return (-val) | 0x8000; //ce serait pas ou plutot que et, sinon on garde que le premier 1 bit(deja remplace)
   return val;
 }
 int val16(int val, int pos)
@@ -300,7 +300,7 @@ void execute(State *s)
 	s->SR |= 0x1;
       if(valLL < 0)
 	s->SR |= 0x2;
-      if(valHL > 0x7fff) //ca devrait pas aller de 0x7fff à -0x8000 ? (-2^n à 2^n -1 ?)
+      if(valHL > 0x7fff) //ca devrait pas aller de 0x7fff a -0x8000 ? (-2^n a 2^n -1 ?)
 	valHL = 0x7fff;
       if(valHL < -0x7fff)
 	valHL = -0x7fff;
@@ -665,23 +665,51 @@ void execute(State *s)
 
 
     case 0x18:
-    	valLLL = (s->SR & 0xfffffff0); // Je pense que c'est bon, mais Ã  checker
-    	*iL = *iL & (0xfffffff0);
-    	*il |= valLLL;
+    	valLLL = (s->SR & 0xf); // on veut garder que les 4 derniers bits de SR non ?
+    	*iL = *iL & (0xfffffff0); //Par contre SR c'est un char, je sais pas si ça va marcher
+    	*iL |= valLLL; //en fait ça dépend de comment il fait les & entre un char et un int
     	s->PC++;
     	break;
 
     case 0x19:
-    	valLLL = (*jL) & 0xfffffff0;
-    	s->SR = valLLL;
+    	valLLL = (*jL) & 0xf; //toujours que les 4 derniers bits non ?
+    	s->SR = valLLL; //mais là on met un int dans SR qui est un char...
     	s->PC++;
     	break;
 
     case 0x1a:
+        if (*iL>*jL)
+        {
+            *iL = 1;
+        }
+        else {*iL = 0;}
+
+        if (*iH>*jH)
+        *iH = 1;
+        else
+        *iH = 0;
+
+        if (*iL == 0)
+        s->SR |= 0x1;
+        s->PC++;
+        break;
+
     case 0x1b:
-      //
-      //
-      //
+        if (*iL<=*jL)
+        *iL = 1;
+        else
+        *iL = 0;
+
+        if (*iH<=*jH)
+        *iH = 1;
+        else
+        *iH = 0;
+
+        if (*iL == 0)
+        s->SR |= 0x1;
+        s->PC++;
+        break;
+
     case 0x1c:
       if(v4 == 0)
 	{
@@ -697,15 +725,40 @@ void execute(State *s)
 	}
       s->PC++;
       break;
+
     case 0x1d:
+    s->SP += 2;
+    if(v0 == 0)
+	{
+	  *iL = set16( read_mem(s->mem, s->SP), read_mem(s->mem, s->SP +1));
+	  if (*iL == 0)
+	  s->SR |= 0x1;
+	}
+      else
+	{
+	  *iH = set16( read_mem(s->mem, s->SP), read_mem(s->mem, s->SP +1));
+	  if (*iH == 0)
+	  s->SR |= 0x1;
+	}
+      s->PC++;
+
     case 0x1e:
+        s->PC = s->RA;
+        s->SP += 2;
+        s->RA = set16( read_mem(s->mem, s->SP), read_mem(s->mem, s->SP +1));
+        s->PC ++;
+        break;
+
     case 0x1f:
-      //
-      //
-      //
+      s->mem = write_mem(s->mem, s->SP, val16(s->RA, 1));
+	  s->mem = write_mem(s->mem, s->SP + 1, val16(s->RA, 0));
+	  s->SP-=2;
+	  s->RA = s->PC;
+	  s->PC = *iL;
       break;
     }
 }
+
 int main(int argc, char **argv)
 {
   if(argc < 2)
