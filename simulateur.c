@@ -14,7 +14,8 @@ Mem *write_mem(Mem *mem, int address, int value)
             printf("error while allocating memory !\n");
             exit(1);
         }
-			mem->address = address;
+			mem->address = address; // On suppose qu'on ecrit dans la memoire dans l'ordre. Sinon, pour numeroter correctement
+			//les cases memoires, il faudrait faire une fonction differente, qui se rappellerait de l'adresse de la case precedente
 			mem->next = NULL;
     }
 
@@ -116,15 +117,17 @@ int bits2int_16(int val)
 int int2bits_16(int val)
 {
   if(val < 0)
-    return (-val) | 0x8000; //ce serait pas ou plutot que et, sinon on garde que le premier 1 bit(deja remplace)
+    return (-val) | 0x8000;
   return val;
 }
 int val16(int val, int pos)
 {
   switch(pos)
     {
-    case 0:return val & 0xffff;
-    case 1:return (val >> 16) & 0xffff;
+    case 0:
+		return val & 0xffff;
+    case 1:
+    	return (val >> 16) & 0xffff;
     }
 }
 int set16(int val1, int val0)
@@ -165,7 +168,7 @@ void execute(State *s)
   switch((instr >> 11) & 0x1f)
     {
     case 0x0:
-		*AccL &= (0xffffffff - 0xff);
+		*AccL &= 0xffffff00; //Ou alors juste un decalage ?
 		*AccL += val8(v01234567, pos_get_code(POS_LL));
 		s->PC++;
 		break;
@@ -175,12 +178,12 @@ void execute(State *s)
     	break;
 
     case 0x2:
-        if((long long)*iL + (long long)jL > INT_MAX || (long long)*iL + (long long)jL < INT_MIN)
+        if((long long)*iL + (long long)*jL > INT_MAX || (long long)*iL + (long long)*jL < INT_MIN)
             s->SR |= 0x8;
-        if((long long)(unsigned)*iL + (long long)(unsigned)jL > INT_MAX)
+        if((long long)(unsigned)*iL + (long long)(unsigned)*jL > INT_MAX)
             s->SR |= 0x4;
-        *iH = *iH + *jH;
-        *iL = *iL + *jL;
+        *iH += *jH;
+        *iL += *jL;
         if (*iL == 0)
           s->SR |= 0x1;
         if (*iL < 0)
@@ -189,12 +192,12 @@ void execute(State *s)
         break;
 
     case 0x3:
-        if((long long)*iL - (long long)jL > INT_MAX || (long long)*iL - (long long)jL < INT_MIN)
+        if((long long)*iL - (long long)*jL > INT_MAX || (long long)*iL - (long long)*jL < INT_MIN)
             s->SR |= 0x8;
-        if((long long)(unsigned)*iL - (long long)(unsigned)jL < 0)
+        if((long long)(unsigned)*iL - (long long)(unsigned)*jL < 0)
             s->SR |= 0x4;
-        *iH = *iH - *jH;
-        *iL = *iL - *jL;
+        *iH -= *jH;
+        *iL -= *jL;
         if (*iL == 0)
           s->SR |= 0x1;
         if (*iL < 0)
@@ -203,33 +206,35 @@ void execute(State *s)
         break;
 
     case 0x4:
-    	*iH = *iH & *jH;
-    	*iL = *iL & *jL;
-    	if (!(iL))
+    	*iH &= *jH;
+    	*iL &= *jL;
+    	if (!(*iL))
     	   s->SR |= 0x1;
     	s->PC++;
     	break;
 
     case 0x5:
-    	*iH = *iH | *jH;
-    	*iL = *iL | *jL;
-    	if (!(iL))
+    	*iH |= *jH;
+    	*iL |= *jL;
+    	if (!(*iL))
     	   s->SR |= 0x1;
     	s->PC++;
     	break;
+
+
 
     case 0x6:
-    	*iH = *iH & *jH;
-    	*iL = *iL & *jL;
-    	if (!(iL))
+      *iH = !(*jH);
+      *iL = !(*jL);
+        if (!(*iL))
     	   s->SR |= 0x1;
     	s->PC++;
     	break;
 
-    case 0x7:
-      *iH = !(*jH);
-      *iL = !(*jL);
-        if (!(iL))
+	 case 0x7:
+    	*iH ^= *jH;
+    	*iL ^= *jL;
+    	if (!(*iL))
     	   s->SR |= 0x1;
     	s->PC++;
     	break;
@@ -249,42 +254,44 @@ void execute(State *s)
       break;
 
     case 0x9:
-        if ( ((*iL)<<((unsigned) *jL))>>((unsigned) *jL) != *iL || ((*iL)<<((unsigned) *jL))>>((unsigned) *jL) != *iL)
+        if ( ((*iL) << ((unsigned) *jL))>>((unsigned) *jL) != *iL)
             s->SR |= 0x4;
-        *iL = (*iL) << ((unsigned) *jL);
-        *iH = (*iH) << ((unsigned) *jH);
+        *iL <<= ((unsigned) *jL);
+        *iH <<= ((unsigned) *jH);
         if (*iL == 0)
             s->SR |= 0x1;
         s->PC++;
         break;
 
     case 0xa:
-        if ( ((*iL)>>((unsigned) *jL))<<((unsigned) *jL) != *iL || ((*iL)>>((unsigned) *jL))<<((unsigned) *jL) != *iL)
+        if ( ((*iL)>>((unsigned) *jL))<<((unsigned) *jL) != *iL)
             s->SR |= 0x4;
-        *iL = (*iL) >> ((unsigned) *jL);
-        *iH = (*iH) >> ((unsigned) *jH);
+        *iL >>= ((unsigned) *jL);
+        *iH >>= ((unsigned) *jH);
         if (*iL == 0)
             s->SR |= 0x1;
         s->PC++;
         break;
 
-    case 0xb:
-        s->mem = write_mem(s->mem, *jL , val16(*iL, 1));
-        s->mem = write_mem(s->mem, *jL +1 , val16(*iL, 0));
-        s->mem = write_mem(s->mem, *jL +2, val16(*iH, 1));
-        s->mem = write_mem(s->mem, *jL +3, val16(*iH, 0));
+	case 0xb:
+        *iL = set16(read_mem(s->mem, *jL), read_mem(s->mem, *jL+1));
+        *iH = set16(read_mem(s->mem, *jL+2), read_mem(s->mem, *jL+3));
         if (*iL == 0)
             s->SR |= 0x1;
         s->PC++;
         break;
 
-    case 0xc:
-        *jL = set16(read_mem(s->mem, *iL), read_mem(s->mem, *iL+1));
-        *jH = set16(read_mem(s->mem, *iL+2), read_mem(s->mem, *iL+3));
-        if (*jL == 0)
+    case 0xc: //1 ou 0 : à voir
+        s->mem = write_mem(s->mem, *iL, val16(*jL, 1));
+        s->mem = write_mem(s->mem, *iL +1, val16(*jL, 0));
+        s->mem = write_mem(s->mem, *iL +2, val16(*jH, 1));
+        s->mem = write_mem(s->mem, *iL +3, val16(*jH, 0));
+        if (*iL == 0)
             s->SR |= 0x1;
         s->PC++;
         break;
+
+
 
     case 0xd:
       s->PC += *iL;
