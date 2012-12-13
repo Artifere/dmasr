@@ -77,7 +77,7 @@ int cond_verified(int cond, int SR)
 int bits2int_4(int val)
 {
   if(val & 0x8)
-    return val | 0xfffffff0;
+    return (val | 0xfffffff0);
   return val;
 }
 int val8(int val, int pos)
@@ -191,8 +191,7 @@ void execute(State *s)
     case 0x3:
         if((long long)*iL - (long long)jL > INT_MAX || (long long)*iL - (long long)jL < INT_MIN)
             s->SR |= 0x8;
-        if((long long)(unsigned)*iL - (long long)(unsigned)jL > INT_MAX) //comment peut on avoir une retenue en faisant
-                                                                         //une soustraction d'entiers non sign√©s ?
+        if((long long)(unsigned)*iL - (long long)(unsigned)jL < 0)
             s->SR |= 0x4;
         *iH = *iH - *jH;
         *iL = *iL - *jL;
@@ -270,18 +269,18 @@ void execute(State *s)
         break;
 
     case 0xb:
-        write_mem(s->Mem, *jL , val16(*iL, 1)); //est-ce qu'on modifie s->mem ? apr√®s on pourra plus revenir au d√©but
-        write_mem(s->Mem, *jL +1 , val16(*iL, 0));//si on fait Mem = writeblabla, √ßa marchera comme il faut je crois me souvenir :p Je checke demain
-        write_mem(s->Mem, *jL +2, val16(*iH, 1));
-        write_mem(s->Mem, *jL +3, val16(*iH, 0));
+        s->mem = write_mem(s->mem, *jL , val16(*iL, 1));
+        s->mem = write_mem(s->mem, *jL +1 , val16(*iL, 0));
+        s->mem = write_mem(s->mem, *jL +2, val16(*iH, 1));
+        s->mem = write_mem(s->mem, *jL +3, val16(*iH, 0));
         if (*iL == 0)
             s->SR |= 0x1;
         s->PC++;
         break;
 
     case 0xc:
-        *jL = set16(read_mem(s->Mem, *iL), read_mem(s->Mem, *iL+1)); //est-ce qu'on modifie s->mem ?
-        *jH = set16(read_mem(s->Mem, *iL+2), read_mem(s->Mem, *iL+3));
+        *jL = set16(read_mem(s->mem, *iL), read_mem(s->mem, *iL+1));
+        *jH = set16(read_mem(s->mem, *iL+2), read_mem(s->mem, *iL+3));
         if (*jL == 0)
             s->SR |= 0x1;
         s->PC++;
@@ -350,7 +349,7 @@ void execute(State *s)
 
     case 0x10:
       valLLL = val8(*iL, 0) + val8(*jL, 0); //pas de bits2int_8, est-ce que c'est bits2int_4 ou rien du tout ?
-      valLLH = val8(*iL, 1) + val8(*jL, 1); //‡ supprimer les bits2int_8 et remplacer par des mod 2^8 non ?
+      valLLH = val8(*iL, 1) + val8(*jL, 1); //√† supprimer les bits2int_8 et remplacer par des mod 2^8 non ?
       valLHL = val8(*iL, 2) + val8(*jL, 2);
       valLHH = val8(*iL, 3) + val8(*jL, 3);
       valHLL = val8(*iH, 0) + val8(*jH, 0);
@@ -442,7 +441,7 @@ void execute(State *s)
       break;
 
     case 0x12:
-      valLL = bits2int_16(val16(*iL, 0)) * bits2int_16(val16(*jL, 0)); //Áa sert ‡ quoi les bits2int_16 ?
+      valLL = bits2int_16(val16(*iL, 0)) * bits2int_16(val16(*jL, 0));
       valLH = bits2int_16(val16(*iL, 1)) * bits2int_16(val16(*jL, 1));
       valHL = bits2int_16(val16(*iH, 0)) * bits2int_16(val16(*jH, 0));
       valHH = bits2int_16(val16(*iH, 1)) * bits2int_16(val16(*jH, 1));
@@ -502,7 +501,7 @@ void execute(State *s)
 
 
     case 0x14:
-      valLLL = val8(*iL, 0) - val8(*jL, 0);
+      valLLL = val8(*iL, 0) - val8(*jL, 0); //bit2_int_8 ?
       valLLH = val8(*iL, 1) - val8(*jL, 1);
       valLHL = val8(*iL, 2) - val8(*jL, 2);
       valLHH = val8(*iL, 3) - val8(*jL, 3);
@@ -656,24 +655,22 @@ void execute(State *s)
     case 0x17:
     	*iH = *jH;
     	*iL = *jL;
-    	//s->SR = (s->SR & 0xe); //Áa Áa remet le premier bit des drapeaux ‡ 0 non ? pourquoi ? j'croyais qu'on les baissait pas
     	if (!(*jH) && !(*jL))
 			s->SR |= 0x1;
-			//s->SR++; //et l‡ on rajoute 1 alors qu'il est peut Ítre dÈj‡ levÈ...
 		s->PC++;
 		break;
 
 
     case 0x18:
-    	valLLL = (s->SR & 0xf); // on veut garder que les 4 derniers bits de SR non ?
-    	*iL = *iL & (0xfffffff0); //Par contre SR c'est un char, je sais pas si Áa va marcher
-    	*iL |= valLLL; //en fait Áa dÈpend de comment il fait les & entre un char et un int
+    	valLLL = ((int)s->SR & 0xf);
+    	*iL = *iL & (0xfffffff0);
+    	*iL |= valLLL;
     	s->PC++;
     	break;
 
     case 0x19:
-    	valLLL = (*jL) & 0xf; //toujours que les 4 derniers bits non ?
-    	s->SR = valLLL; //mais l‡ on met un int dans SR qui est un char...
+    	valLLL = (*jL) & 0xf;
+    	s->SR = valLLL;
     	s->PC++;
     	break;
 

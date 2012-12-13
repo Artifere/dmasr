@@ -107,15 +107,9 @@ int check_arglist(OpCode op, Arguments *args)
 		exit(1);
 	}
 		break;
-	 case ARGS_EMPTY:
+    case ARGS_EMPTY:
 		break;
-		//case ARGS_EMPTY: //Inutile, à voir ==> OUAIS SI, POUR LA SYMETRIE ET LES WARNINGS DU COMPILO
-        //if(args->type != REG || args->previous->type != REG)
-        //{
-        //  printf("%s needs registers as first and second argument !\n", opcode_get_string(op));
-        //exit(1);
-        // }
-        //break;
+
     case ARGS_LAB:
 		if(args->type != IDENT)
 	{
@@ -237,7 +231,6 @@ void write_prog(Program *prog, FILE *file)
 				break;
 
         case NOP:
-				word = 0; //Facultatif ?
 				break;
 
         case ADD:
