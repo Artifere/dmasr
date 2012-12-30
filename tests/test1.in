@@ -1,0 +1,6 @@
+MAKE NC 1
+ADDI NC $1,2
+SHL NC $0,$1
+ADDI NC $3,-3
+
+#Un petit test pour voir si ADDI marche

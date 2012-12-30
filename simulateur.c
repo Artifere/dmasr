@@ -6,44 +6,32 @@
 
 Mem *write_mem(Mem *mem, int address, int value)
 {
-    if(mem == NULL)
-    {
-        mem = malloc(sizeof(Mem));
-        if(mem == NULL)
-        {
-            printf("error while allocating memory !\n");
-            exit(1);
-        }
-        mem->address = address; // On suppose qu'on ecrit dans la memoire dans l'ordre. Sinon, pour numeroter correctement
-        //les cases memoires, il faudrait faire une fonction differente, qui se rappellerait de l'adresse de la case precedente
-        mem->next = NULL;
-    }
-
-    if(mem->address == address)
-        mem->value = value;
-    else
-        mem->next = write_mem(mem->next, address, value);
-    return mem;
+  if(mem == NULL)
+    mem = g_hash_table_new(NULL, NULL);
+  g_hash_table_insert(mem, GINT_TO_POINTER(address), GINT_TO_POINTER(value));
+  return mem;
 }
-
 int read_mem(Mem *mem, int address)
 {
-    if(mem == NULL)
+  if(mem == NULL)
+    mem = g_hash_table_new(NULL, NULL);
+  if(!g_hash_table_lookup_extended(mem, GINT_TO_POINTER(address), NULL, NULL))
     {
-        mem = malloc(sizeof(Mem));
-        if(mem == NULL)
-        {
-            printf("error while allocating memory !\n");
-            exit(1);
-        }
-        mem->address = address;
-        mem->next = NULL;
-        return mem->value;
+      int value;
+      g_hash_table_insert(mem, GINT_TO_POINTER(address), GINT_TO_POINTER(value));
     }
-    if(mem->address == address)
-        return mem->value;
-    return read_mem(mem->next, address);
+  return GPOINTER_TO_INT(g_hash_table_lookup(mem, GINT_TO_POINTER(address)));
 }
+Mem *free_mem(Mem *mem)
+{
+  if(mem == NULL)
+    return mem;
+  g_hash_table_unref(mem);
+  return NULL;
+}
+
+
+
 
 int cond_verified(int cond, int SR)
 {
@@ -165,11 +153,12 @@ void execute(State *s)
     int *i2H = &(s->reg[v45][1]);
     int *i2L = &(s->reg[v45][0]);
     int val, valHH, valHL, valLH, valLL, valHHH, valHHL, valHLH, valHLL, valLHH, valLHL, valLLH, valLLL;
+    unsigned int shiftLength;
     switch((instr >> 11) & 0x1f)
     {
     case 0x0:
-        *AccL &= 0xffffff00; //Ou alors juste un decalage ?
-        *AccL += val8(v01234567, 0); //POS_LL
+        *AccL &= 0xffffff00;
+        *AccL += val8(v01234567, 0);
         s->PC++;
         break;
 
@@ -254,7 +243,11 @@ void execute(State *s)
         break;
 
     case 0x9:
-        if ( ((*iL) << ((unsigned) *jL))>>((unsigned) *jL) != *iL)
+			if ((unsigned) *jL > 32)
+				shiftLength = 32;
+			else
+				shiftLength = (unsigned) *jL;
+			if ((*iL) && ((*iL) & (~((1 << (32 - shiftLength))-1))))
             s->SR |= 0x4;
         *iL <<= ((unsigned) *jL);
         *iH <<= ((unsigned) *jH);
@@ -264,7 +257,11 @@ void execute(State *s)
         break;
 
     case 0xa:
-        if ( ((*iL)>>((unsigned) *jL))<<((unsigned) *jL) != *iL)
+			if ((unsigned) *jL > 32)
+				shiftLength = 32;
+			else
+				shiftLength = (unsigned) *jL;
+        if ((*iL) && ((*iL) & (((1 << (shiftLength))-1))))
             s->SR |= 0x4;
         *iL >>= ((unsigned) *jL);
         *iH >>= ((unsigned) *jH);
@@ -771,45 +768,4 @@ void execute(State *s)
         s->PC = *iL;
         break;
     }
-}
-
-int main(int argc, char **argv)
-{
-    if(argc < 2)
-    {
-        printf("Please provide a binary file to execute !\n");
-        exit(1);
-    }
-    FILE *file = fopen(argv[1], "r");
-    if(file == NULL)
-    {
-        printf("Error opening file: %s\n", argv[1]);
-        exit(1);
-    }
-    State *s = malloc(sizeof(State));
-    if(s == NULL)
-    {
-        printf("error while allocating memory !\n");
-        exit(1);
-    }
-    s->mem = NULL;
-    s->PC = 0;
-    s->SP = 0x100000;
-    s->RA = 0;
-    s->SR = 0;
-    int pos = 0;
-    while(!feof(file))
-    {
-        unsigned char c1 = fgetc(file);
-        unsigned char c2 = fgetc(file);
-        if(feof(file))
-            break;
-        int instr = (c1 << 8) + c2;
-        s->mem = write_mem(s->mem, pos, instr);
-        pos++;
-    }
-    while(1)
-        execute(s);
-    fclose(file);
-    return 0;
 }

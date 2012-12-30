@@ -142,8 +142,12 @@ ArgList opcode_get_arglist(OpCode code)
     case CALL:
         return ARGS_REG;
 
-    case MAKE16://////
-    case MAKE32://////
+    case MAKE16:
+		  return ARGS_NUM;
+    case MAKE32:
+    	  return ARGS_NUM;
+	 case MAKE64:
+		  return ARGS_NUM;
 
     case JUMP://////
       break;

@@ -1,0 +1,13 @@
+MAKE NC 2
+MOVE32 NC H,L,$0,$0
+ADDI NC $0,-2
+NOP NC
+ADDI NC $0,2
+MOVE32 NC H,L,$0,$0
+SETSR NC $1
+MAKE NC 1
+MOVE32 NC H,L,$0,$0
+ADDI NC $0,-2
+
+#Teste la gestion des flags du ADDI (puis vérifie que NOP marche bien)
+#ADDI (fourni) semble avoir quelques problèmes : 2-2+2 != 2

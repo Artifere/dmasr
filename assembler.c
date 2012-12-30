@@ -3,6 +3,7 @@
 #include <string.h>
 #include "assembler.h"
 #include "parser.h"
+
 int get_address(Labels *labels, char *label)
 {
   if(labels == NULL)
@@ -163,7 +164,10 @@ Program *insert_prog(Program *prog, Program *prog2)
 }
 Program *make16(int val)
 {
-  //
+  Program *ret = malloc(sizeof(*ret));
+  ret->type = INSTRUCTION;
+  ret->instr = malloc(*ret->instr);
+
   //
   //
 }
@@ -186,15 +190,19 @@ Program *expand_macros(Program *prog, Labels *labels)
   switch(prog->instr->op)
     {
     case MAKE16:
-      //
-      //
-      //
+    	val = prog->instr->args->num;
+      cond = prog->instr->cond;
+      prog = erase_line(prog);
+      prog = insert_prog(prog, make16(val));
+      break;
+
     case MAKE32:
       val = prog->instr->args->num;
       cond = prog->instr->cond;
       prog = erase_line(prog);
       prog = insert_prog(prog, make32(val));
       break;
+
     case JUMP:
       address = get_address(labels, prog->instr->args->ident);
       cond = prog->instr->cond;

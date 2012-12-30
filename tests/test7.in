@@ -1,0 +1,6 @@
+MAKE NC 3
+ADD NC $1,$0
+MAKE NC -3
+ADD NC $1,$0
+
+#Test du ADD avec des nombres négatifs. Ne marche pas mieux que le ADDI :(

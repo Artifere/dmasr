@@ -1,0 +1,12 @@
+MAKE NC 8
+ADD NC $1,$0
+MAKE NC 1
+SHL NC $0,$1
+SHL NC $0,$1
+SHL NC $0,$1
+SHL NC $0,$1
+SETSR NC $2
+SHR NC $0,$1
+SHL NC $0,$1
+
+#Ici on teste le décalage gauche, ainsi que la bonne gestion des drapeaux suite à un SHL

@@ -1,0 +1,5 @@
+ADD NC $0,$0
+MAKE NZ 1
+MAKE Z 1
+
+#Teste la gestion des conditions NZ et Z.
