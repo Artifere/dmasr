@@ -149,7 +149,14 @@ ArgList opcode_get_arglist(OpCode code)
 	 case MAKE64:
 		  return ARGS_NUM;
 
-    case JUMP://////
+    case JUMP:
+          return ARGS_LAB;
+    case CALLF:
+          return ARGS_LAB;
+    case STORE:
+          return ARGS_LAB_REG;
+    case LOAD:
+          return ARGS_REG_LAB;
       break;
     }
 }
@@ -235,8 +242,12 @@ char *opcode_get_string(OpCode code)
 
     case MAKE16: return "MAKE16";
     case MAKE32: return "MAKE32";
+    case MAKE64: return "MAKE64";
 
     case JUMP:   return "JUMP";
+    case CALLF:  return "CALLF";
+    case STORE:  return "STORE";
+    case LOAD:   return "LOAD";
     }
   return "";
 }

@@ -162,11 +162,11 @@ Program *insert_prog(Program *prog, Program *prog2)
   prog_tmp->previous = prog;
   return prog2;
 }
-Program *make16(int val)
+Program *make16(int val, Cond cond) //faut rajouter une condition dans les entrees non ? mais apres faut faire un jump
 {
-  Program *ret = malloc(sizeof(*ret));
+  Program *ret = malloc(sizeof(*ret)); //sizeof *ret ? c'est pas un type ret si ? c'est pas plutot sizeof(program*) ?
   ret->type = INSTRUCTION;
-  ret->instr = malloc(*ret->instr);
+  ret->instr = malloc(*ret->instr); //et la sizeof(instruction*) ?
 
   //
   //
@@ -182,7 +182,9 @@ Program *expand_macros(Program *prog, Labels *labels)
   if(prog == NULL)
     return prog;
   prog->previous = expand_macros(prog->previous, labels);
-  if(prog->type != INSTRUCTION)
+  if(prog->type != INSTRUCTION) //c'est pas plutot prog->type == instruction ? parce que les programs
+                                //normaux c'est ceux qui ont un type instruction non ? et les macros ont un autre type
+                                //ou alors j'ai rien compris
     return prog;
   int val, address;
   Cond cond;
