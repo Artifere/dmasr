@@ -1,0 +1,57 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{times} 
+\usepackage[french]{babel}
+\usepackage{amsmath, amsthm, amssymb}
+
+\sloppy  
+
+\title{DM ARS : Questions bonus}
+\author{Alexandre Talon et Alice Pellet-Mary}
+\date{\today} 
+
+\begin{document}
+
+\maketitle
+
+\textbf{Question 1.4.5}
+\\
+\\
+Multiplication de 2 entiers de 32 bits stockés dans les parties basses des registres 1 et 2. Donne le résultat sur 64 bits dans le registre 3 (efface la partie haute du registre 2).\\
+\\
+\textbf{SUB Acc Acc}    (on remet l'accumulateur à zero)\\
+\textbf{MAKE 31}        (on se sert d'un shift 31 pour déterminer la parité des entiers)\\
+\textbf{MOVE64 REG4 Acc}\\
+\textbf{SUB REG5 REG5}\\
+\textbf{ADDI REG5 1}   (on stocke la valeur 1 dans les parties hautes et basses du registre 5 pour des shifts futurs)\\
+\textbf{SUB REG6 REG6}  (on met zero dans le registre 6 pour pouvoir remettre les drapeaux à zéro)\\
+\textbf{SUB REG7 REG7}\\
+\textbf{ADDI REG7 1}\\
+\textbf{SUB Acc Acc}\\
+\textbf{MOVE32 H L Acc REG7}\\
+\textbf{MOVE64 REG7 Acc} (on met a dans la partie haute du registre 7 et 0 dans la partie basse)\\
+\textbf{SUB REG8 REG8}\\
+\textbf{ADDI REG8 -4}\\
+\textbf{ADDI REG8 -4 }   (on met -8 dans le registre 8)\\
+\\
+(début de la multiplication)\\
+\\
+\textbf{SETSR 0000 REG6}\\
+\textbf{SHL REG1 REG4}   (on regarde si le dernier bit est un 1 ou pas)\\
+\textbf{ADD$\circ$Z REG3 REG2} \\
+\textbf{SETSR 0000 REG6} (on remet les drapeaux à zéro)\\
+\textbf{SHL REG2 REG6  } (déplace les 2 parties du registre 2 d'un bit vers la gauche)\\
+\textbf{ADD$\circ$C REG2 REG7 } (si on déborde, c'est forcément la partie basse qui déborde, donc c'est qu'un 1 est sorti, et il faut rajouter un 1 en bas de la partie haute)\\
+\textbf{SETSR 0000 REG6}\\
+\textbf{SHR REG1 REG5}\\
+\textbf{JMP$\circ$NZ REG8 0000}\\
+\\
+\\
+\textbf{Question 1.4.6}\\
+\\
+Pour implémenter des fonction trigonométriques en virgule fixe sur notre architecture, on peut stocker en mémoire un tableau avec les valeurs de certains points (plus on en stocke, pour nos fonctions seront précises). Quand on cherche la valeur d'un nombre, on cherche dans le tableau le nombre le plus proche et on renvoie sa valeur. On peut améliorer cette approximation en stockant aussi dans le tableau la valeur de la dérivée : quand on cherche la valeur d'un nombre x1, on prend le nombre de notre tableau de plus proche x2, on calcule la valeur en x1 de la tangente à la courbe en x2 (c'est un calcul qui ne demande que des additions et des multiplications). On peut encore améliorer la précision en stockant dans le tableau la valeur de la dévirée seconde, troisième...
+On peut aussi utiliser les développements en série entière au voisinage de zéro pour avoir une valeur approchée en ne faisant que des additions et des multiplications. Plus notre valeur est proche de zéro et plus ce calcul sera précis en peu d'opérations.
+ 
+ 
+\end{document}
