@@ -158,7 +158,8 @@ void execute(State *s)
     {
     case 0x0:
         *AccL &= 0xffffff00;
-        *AccL += val8(v01234567, 0);
+        //Correction MAKE
+        *AccL += sval;
         s->PC++;
         break;
 
@@ -173,6 +174,7 @@ void execute(State *s)
             s->SR |= 0x4;
         *iH += *jH;
         *iL += *jL;
+
         if (*iL == 0)
             s->SR |= 0x1;
         if (*iL < 0)
@@ -229,18 +231,20 @@ void execute(State *s)
         break;
 
     case 0x8:
-        *iH += sval;
-        if((long long)*iL + (long long)sval > INT_MAX || (long long)*iL + (long long)sval < INT_MIN)
-            s->SR |= 0x8;
-        if((long long)(unsigned)*iL + (long long)(unsigned)sval > INT_MAX)
-            s->SR |= 0x4;
-        *iL += sval;
-        if(*iL == 0)
-            s->SR |= 0x1;
-        if(*iL < 0)
-            s->SR |= 0x2;
-        s->PC++;
-        break;
+      *iH += sval;
+      if((long long)*iL + (long long)sval > INT_MAX || (long long)*iL + (long long)sval < INT_MIN)
+	s->SR |= 0x8;
+      if((long long)(unsigned)*iL + (long long)(unsigned)sval > INT_MAX)
+	s->SR |= 0x4;
+      printf("%d,", *iL);
+      *iL += sval;
+      printf("%d =>%d\n", sval, *iL);
+      if(*iL == 0)
+	s->SR |= 0x1;
+      if(*iL < 0)
+	s->SR |= 0x2;
+      s->PC++;
+      break;
 
     case 0x9:
 			if ((unsigned) *jL > 32)
@@ -732,15 +736,16 @@ void execute(State *s)
         break;
 
     case 0x1d:
-        s->SP += 2;
         if(v0 == 0)
         {
+            s->SP += 2;
             *iL = set16(read_mem(s->mem, s->SP), read_mem(s->mem, s->SP+1));
             if (*iL == 0)
                 s->SR |= 0x1;
         }
         else if (v0 == 1)
         {
+            s->SP += 2;
             *iH = set16(read_mem(s->mem, s->SP), read_mem(s->mem, s->SP+1));
             if (*iH == 0)
                 s->SR |= 0x1;

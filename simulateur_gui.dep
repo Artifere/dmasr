@@ -1,2 +1,0 @@
-simulateur_gui.o: simulateur_gui.c /usr/include/gtk-3.0/gtk/gtk.h \
- simulateur.h

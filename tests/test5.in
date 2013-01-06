@@ -11,3 +11,5 @@ ADDI NC $0,-2
 
 #Teste la gestion des flags du ADDI (puis vérifie que NOP marche bien)
 #ADDI (fourni) semble avoir quelques problèmes : 2-2+2 != 2
+
+#MAJ Deuxième rendu : on a corrigé un bug dans le ADDI fourni dans assembler.c, et ça marche maintenant =)

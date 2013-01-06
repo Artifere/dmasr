@@ -66,8 +66,8 @@ int opcode_get_expanded_size(OpCode code)
     case RET:    return 1;
     case CALL:   return 1;
 
-    case MAKE16: //////
-    case MAKE32: //////
+    case MAKE16: return 31;
+    case MAKE32: return 30;
 
     case JUMP:   //////
       break;
