@@ -27,6 +27,8 @@ int arglist_get_nargs(ArgList l)
         return 2;
     case ARGS_LAB:
         return 1;
+    case ARGS_NUM_NUM:
+        return 2;
     }
 }
 int opcode_get_expanded_size(OpCode code)
@@ -67,7 +69,8 @@ int opcode_get_expanded_size(OpCode code)
     case CALL:   return 1;
 
     case MAKE16: return 31;
-    case MAKE32: return 30;
+    case MAKE32: return 29;
+    case MAKE64: return 36;
 
     case JUMP:   //////
       break;
@@ -147,7 +150,7 @@ ArgList opcode_get_arglist(OpCode code)
     case MAKE32:
     	  return ARGS_NUM;
 	 case MAKE64:
-		  return ARGS_NUM;
+		  return ARGS_NUM_NUM;
 
     case JUMP:
           return ARGS_LAB;

@@ -47,7 +47,7 @@ int check_arglist(OpCode op, Arguments *args)
 {
   if(count_args(args) != opcode_get_nargs(op))
     {
-      printf("error: %s needs %d arguments !\n", opcode_get_string(op), opcode_get_nargs(op));
+      printf("error: %s needs %d arguments!\n", opcode_get_string(op), opcode_get_nargs(op));
       exit(1);
     }
   switch(opcode_get_arglist(op))
@@ -55,35 +55,35 @@ int check_arglist(OpCode op, Arguments *args)
     case ARGS_NUM:
       if(args->type != NUM)
 	{
-	  printf("%s needs a value as argument !\n", opcode_get_string(op));
+	  printf("%s needs a value as argument!\n", opcode_get_string(op));
 	  exit(1);
 	}
       break;
     case ARGS_REG_REG:
       if(args->type != REG || args->previous->type != REG)
 	{
-	  printf("%s needs registers as first and second argument !\n", opcode_get_string(op));
+	  printf("%s needs registers as first and second argument!\n", opcode_get_string(op));
 	  exit(1);
 	}
       break;
 	 case ARGS_REG_NUM:
 		if(args->type != NUM || args->previous->type != REG)
 	{
-		printf("%s needs register as first argument and value as second argument !\n", opcode_get_string(op));
+		printf("%s needs a value as first argument!\n", opcode_get_string(op));
 		exit(1);
 	}
 		break;
     case ARGS_REG:
 		if(args->type != REG)
 	{
-		printf("%s needs a registers as argument !\n", opcode_get_string(op));
+		printf("%s needs a registers as argument!\n", opcode_get_string(op));
 		exit(1);
 	}
 		break;
     case ARGS_POS_POS_REG:
 		if(args->type != REG || args->previous->type != POS || args->previous->previous->type != POS)
 	{
-		printf("%s needs positions as first and second argument and register as third argument !\n", opcode_get_string(op));
+		printf("%s needs positions as first and second argument and register as third argument!\n", opcode_get_string(op));
 		exit(1);
 	}
 		break;
@@ -97,14 +97,14 @@ int check_arglist(OpCode op, Arguments *args)
     case ARGS_POS_REG:
 		if(args->type != REG || args->previous->type != POS)
 	{
-		printf("%s needs position as first argument and register as second argument !\n", opcode_get_string(op));
+		printf("%s needs position as first argument and register as second argument!\n", opcode_get_string(op));
 		exit(1);
 	}
 		break;
     case ARGS_REG_POS:
 		if(args->type != POS || args->previous->type != REG)
 	{
-		printf("%s needs register as first argument and position as second argument !\n", opcode_get_string(op));
+		printf("%s needs register as first argument and position as second argument!\n", opcode_get_string(op));
 		exit(1);
 	}
 		break;
@@ -114,22 +114,29 @@ int check_arglist(OpCode op, Arguments *args)
     case ARGS_LAB:
 		if(args->type != IDENT)
 	{
-		printf("%s needs label as first argument !\n", opcode_get_string(op));
+		printf("%s needs label as first argument!\n", opcode_get_string(op));
 		exit(1);
 	}
 		break;
     case ARGS_REG_LAB:
 		if(args->type != IDENT || args->previous->type != REG)
 	{
-		printf("%s needs register as first argument and label as second argument !\n", opcode_get_string(op));
+		printf("%s needs register as first argument and label as second argument!\n", opcode_get_string(op));
 		exit(1);
 	}
 		break;
     case ARGS_LAB_REG:
 		if(args->type != REG || args->previous->type != IDENT)
 	{
-		printf("%s needs label as first argument and register as second argument !\n", opcode_get_string(op));
+		printf("%s needs label as first argument and register as second argument!\n", opcode_get_string(op));
 		exit(1);
+	}
+	break;
+	case ARGS_NUM_NUM:
+      if(args->type != NUM || args->previous->type != NUM)
+	{
+	  printf("%s needs a value as first and second argument!\n", opcode_get_string(op));
+	  exit(1);
 	}
 	}
 }
@@ -197,20 +204,12 @@ Program *add_prog(OpCode op, Cond cond, Arguments *args, Program *cur)
   return ret;
 }
 
-Program *make16(int val, Cond macro_cond) //faut rajouter une condition dans les entrees non ? mais apres faut faire un jump
+Program *make16(int val, Cond macro_cond)
 {
   int lower = (val & 0xff);
   int upper = (val >> 8) & 0xff;
-  Program *prog_head = NULL; //sizeof *ret ? c'est pas un type ret si ? c'est pas plutot sizeof(program*) ?
-  //En fait tu as le droit de faire un sizeof d'une variable, ça te renvoie la taille que prend cette variable en mémoire.
-  // Faire comme ça c'est pratique des fois : si ta var c'est un int, et que finalement tu la changes en char par exemple,
-  //T'as pas besoin de modifier ce qu'il y a dans le sizeof :D
-  //Program *tmp_prog = NULL;
+  Program *prog_head = NULL;
   Arguments *arg_head = NULL;
-  //Arguments *tmp_arg = NULL;
-
-  //Prions pour que j'ai bien compris : on commence par la dernière proguction (il semblerait que ce soit un mélange inconscient entre programme et instruction^^).
-  //Puis on met la précédentes dans previous, etc.
 
   //1.PUSH L $2
   arg_head = add_arg(POS, 0, NULL, POS_L, NULL);
@@ -338,7 +337,7 @@ Program *make16(int val, Cond macro_cond) //faut rajouter une condition dans les
   return prog_head;
 }
 
-Program *make32(int val, Cond macro_cond) //faut rajouter une condition dans les entrees non ? mais apres faut faire un jump
+Program *make32(int val, Cond macro_cond)
 {
   int lower_l = (val & 0xff);
   int lower_h = (val >> 8) & 0xff;
@@ -392,10 +391,6 @@ Program *make32(int val, Cond macro_cond) //faut rajouter une condition dans les
   arg_head = add_arg(REG, 1, NULL, 0, NULL);
   arg_head = add_arg(NUM, 5, NULL, 0, arg_head);
   prog_head = add_prog(ADDI, COND_NC, arg_head, prog_head);
-  //SHL $0 $1
-  arg_head = add_arg(REG, 0, NULL, 0, NULL);
-  arg_head = add_arg(REG, 1, NULL, 0, arg_head);
-  prog_head = add_prog(SHL, COND_NC, arg_head, prog_head);
   //MAKE *les 8 bits forts de poids fort*
   arg_head = add_arg(NUM, upper_h, NULL, 0, NULL);
   prog_head = add_prog(MAKE, COND_NC, arg_head, prog_head);
@@ -403,10 +398,10 @@ Program *make32(int val, Cond macro_cond) //faut rajouter une condition dans les
   arg_head = add_arg(REG, 0, NULL, 0, NULL);
   arg_head = add_arg(REG, 1, NULL, 0, arg_head);
   prog_head = add_prog(SHL, COND_NC, arg_head, prog_head);
-  //15.MAKE *les 8 bits faibles de poids fort*
+  //MAKE *les 8 bits faibles de poids fort*
   arg_head = add_arg(NUM, upper_l, NULL, 0, NULL);
   prog_head = add_prog(MAKE, COND_NC, arg_head, prog_head);
-  //SHL $0 $1
+  //15.SHL $0 $1
   arg_head = add_arg(REG, 0, NULL, 0, NULL);
   arg_head = add_arg(REG, 1, NULL, 0, arg_head);
   prog_head = add_prog(SHL, COND_NC, arg_head, prog_head);
@@ -420,11 +415,11 @@ Program *make32(int val, Cond macro_cond) //faut rajouter une condition dans les
   //MAKE *les 8 bits faibles de poids faible*
   arg_head = add_arg(NUM, lower_l, NULL, 0, NULL);
   prog_head = add_prog(MAKE, COND_NC, arg_head, prog_head);
-  //20.POP H $0
+  //POP H $0
   arg_head = add_arg(REG, 0, NULL, 0, NULL);
   arg_head = add_arg(POS, 0, NULL, POS_H, arg_head);
   prog_head = add_prog(POP, COND_NC, arg_head, prog_head);
-  //ADDI $1 -2
+  //20.ADDI $1 -2
   arg_head = add_arg(REG, 1, NULL, 0, NULL);
   arg_head = add_arg(NUM, -2, NULL, 0, arg_head);
   prog_head = add_prog(ADDI, COND_NC, arg_head, prog_head);
@@ -440,11 +435,11 @@ Program *make32(int val, Cond macro_cond) //faut rajouter une condition dans les
   //MAKE 20
   arg_head = add_arg(NUM, 20, NULL, 0, NULL);
   prog_head = add_prog(MAKE, COND_NC, arg_head, prog_head);
-  //25.SUB $1 $0
+  //SUB $1 $0
   arg_head = add_arg(REG, 1, NULL, 0, NULL);
   arg_head = add_arg(REG, 0, NULL, 0, arg_head);
   prog_head = add_prog(SUB, COND_NC, arg_head, prog_head);
-  //SETSR  $2
+  //25.SETSR  $2
   arg_head = add_arg(REG, 2, NULL, 0, NULL);
   prog_head = add_prog(SETSR, COND_NC, arg_head, prog_head);
   //JMP *conditions de la macro *$1
@@ -461,7 +456,163 @@ Program *make32(int val, Cond macro_cond) //faut rajouter une condition dans les
   arg_head = add_arg(REG, 1, NULL, 0, NULL);
   arg_head = add_arg(POS, 0, NULL, POS_L, arg_head);
   prog_head = add_prog(POP, COND_NC, arg_head, prog_head);
-  //30.POP L $2
+  //29.POP L $2
+  arg_head = add_arg(REG, 2, NULL, 0, NULL);
+  arg_head = add_arg(POS, 0, NULL, POS_L, arg_head);
+  prog_head = add_prog(POP, COND_NC, arg_head, prog_head);
+
+  return prog_head;
+}
+
+
+Program *make64(int val_h, int val_l, Cond macro_cond)
+{
+  int lll = (val_l & 0xff);
+  int llh = (val_l >> 8) & 0xff;
+  int lhl = (val_l >> 16) & 0xff;
+  int lhh = (val_l >> 24) & 0xff;
+  int hll = (val_h & 0xff);
+  int hlh = (val_h >> 8) & 0xff;
+  int hhl = (val_h >> 16) & 0xff;
+  int hhh = (val_h >> 24) & 0xff;
+  Program *prog_head = NULL;
+  Arguments *arg_head = NULL;
+
+
+  //1.PUSH L $2
+  arg_head = add_arg(POS, 0, NULL, POS_L, NULL);
+  arg_head = add_arg(REG, 2, NULL, 0, arg_head);
+  prog_head = add_prog(PUSH, COND_NC, arg_head, NULL);
+  //PUSH L $1
+  arg_head = add_arg(POS, 0, NULL, POS_L, NULL);
+  arg_head = add_arg(REG, 1, NULL, 0, arg_head);
+  prog_head = add_prog(PUSH, COND_NC, arg_head, prog_head);
+  //PUSH H $1
+  arg_head = add_arg(POS, 0, NULL, POS_H, NULL);
+  arg_head = add_arg(REG, 1, NULL, 0, arg_head);
+  prog_head = add_prog(PUSH, COND_NC, arg_head, prog_head);
+  //GETSR $2
+  arg_head = add_arg(REG, 2, NULL, 0, NULL);
+  prog_head = add_prog(GETSR, COND_NC, arg_head, prog_head);
+  //5.MAKE 23
+  arg_head = add_arg(NUM, 23, NULL, 0, NULL);
+  prog_head = add_prog(MAKE, COND_NC, arg_head, prog_head);
+  //JMP $0
+  arg_head = add_arg(REG, 0, NULL, 0, NULL);
+  prog_head = add_prog(JMP, COND_NC, arg_head, prog_head);
+
+
+
+  //SUB $0 $0
+  arg_head = add_arg(REG, 0, NULL, 0, NULL);
+  arg_head = add_arg(REG, 0, NULL, 0, arg_head);
+  prog_head = add_prog(SUB, COND_NC, arg_head, prog_head);
+  //SUB $1 $1
+  arg_head = add_arg(REG, 1, NULL, 0, NULL);
+  arg_head = add_arg(REG, 1, NULL, 0, arg_head);
+  prog_head = add_prog(SUB, COND_NC, arg_head, prog_head);
+  //ADDI $1 3
+  arg_head = add_arg(REG, 1, NULL, 0, NULL);
+  arg_head = add_arg(NUM, 3, NULL, 0, arg_head);
+  prog_head = add_prog(ADDI, COND_NC, arg_head, prog_head);
+  //10.ADDI $1 5
+  arg_head = add_arg(REG, 1, NULL, 0, NULL);
+  arg_head = add_arg(NUM, 5, NULL, 0, arg_head);
+  prog_head = add_prog(ADDI, COND_NC, arg_head, prog_head);
+  //MAKE *les 8 bits forts de poids fort, moitié haute*
+  arg_head = add_arg(NUM, hhh, NULL, 0, NULL);
+  prog_head = add_prog(MAKE, COND_NC, arg_head, prog_head);
+  //SHL $0 $1
+  arg_head = add_arg(REG, 0, NULL, 0, NULL);
+  arg_head = add_arg(REG, 1, NULL, 0, arg_head);
+  prog_head = add_prog(SHL, COND_NC, arg_head, prog_head);
+  //MAKE *les 8 bits faibles de poids fort, moitié haute*
+  arg_head = add_arg(NUM, hhl, NULL, 0, NULL);
+  prog_head = add_prog(MAKE, COND_NC, arg_head, prog_head);
+  //SHL $0 $1
+  arg_head = add_arg(REG, 0, NULL, 0, NULL);
+  arg_head = add_arg(REG, 1, NULL, 0, arg_head);
+  prog_head = add_prog(SHL, COND_NC, arg_head, prog_head);
+  //15.MAKE *les 8 bits forts de poids faible, moitié haute*
+  arg_head = add_arg(NUM, hlh, NULL, 0, NULL);
+  prog_head = add_prog(MAKE, COND_NC, arg_head, prog_head);
+  //SHL $0 $1
+  arg_head = add_arg(REG, 0, NULL, 0, NULL);
+  arg_head = add_arg(REG, 1, NULL, 0, arg_head);
+  prog_head = add_prog(SHL, COND_NC, arg_head, prog_head);
+  //MAKE *les 8 bits faibles de poids faible, moitié haute*
+  arg_head = add_arg(NUM, hll, NULL, 0, NULL);
+  prog_head = add_prog(MAKE, COND_NC, arg_head, prog_head);
+  //PUSH L $0
+  arg_head = add_arg(POS, 0, NULL, POS_L, NULL);
+  arg_head = add_arg(REG, 0, NULL, 0, arg_head);
+  prog_head = add_prog(PUSH, COND_NC, arg_head, prog_head);
+  //MAKE *les 8 bits forts de poids fort, moitié basse*
+  arg_head = add_arg(NUM, lhh, NULL, 0, NULL);
+  prog_head = add_prog(MAKE, COND_NC, arg_head, prog_head);
+  //20.SHL $0 $1
+  arg_head = add_arg(REG, 0, NULL, 0, NULL);
+  arg_head = add_arg(REG, 1, NULL, 0, arg_head);
+  prog_head = add_prog(SHL, COND_NC, arg_head, prog_head);
+  //MAKE *les 8 bits faibles de poids fort, moitié basse*
+  arg_head = add_arg(NUM, lhl, NULL, 0, NULL);
+  prog_head = add_prog(MAKE, COND_NC, arg_head, prog_head);
+  //SHL $0 $1
+  arg_head = add_arg(REG, 0, NULL, 0, NULL);
+  arg_head = add_arg(REG, 1, NULL, 0, arg_head);
+  prog_head = add_prog(SHL, COND_NC, arg_head, prog_head);
+  //MAKE *les 8 bits forts de poids faible, moitié basse*
+  arg_head = add_arg(NUM, llh, NULL, 0, NULL);
+  prog_head = add_prog(MAKE, COND_NC, arg_head, prog_head);
+  //SHL $0 $1
+  arg_head = add_arg(REG, 0, NULL, 0, NULL);
+  arg_head = add_arg(REG, 1, NULL, 0, arg_head);
+  prog_head = add_prog(SHL, COND_NC, arg_head, prog_head);
+  //25.MAKE *les 8 bits faibles de poids faible, moitié basse*
+  arg_head = add_arg(NUM, lll, NULL, 0, NULL);
+  prog_head = add_prog(MAKE, COND_NC, arg_head, prog_head);
+  //POP $0 H
+  arg_head = add_arg(REG, 0, NULL, 0, NULL);
+  arg_head = add_arg(POS, 0, NULL, POS_H, arg_head);
+  prog_head = add_prog(POP, COND_NC, arg_head, prog_head);
+  //ADDI $1 -2
+  arg_head = add_arg(REG, 1, NULL, 0, NULL);
+  arg_head = add_arg(NUM, -2, NULL, 0, arg_head);
+  prog_head = add_prog(ADDI, COND_NC, arg_head, prog_head);
+  //JMP $1
+  arg_head = add_arg(REG, 1, NULL, 0, NULL);
+  prog_head = add_prog(JMP, COND_NC, arg_head, prog_head);
+
+
+  //SUB $1 $1
+  arg_head = add_arg(REG, 1, NULL, 0, NULL);
+  arg_head = add_arg(REG, 1, NULL, 0, arg_head);
+  prog_head = add_prog(SUB, COND_NC, arg_head, prog_head);
+  //30.MAKE 26
+  arg_head = add_arg(NUM, 20, NULL, 0, NULL);
+  prog_head = add_prog(MAKE, COND_NC, arg_head, prog_head);
+  //SUB $1 $0
+  arg_head = add_arg(REG, 1, NULL, 0, NULL);
+  arg_head = add_arg(REG, 0, NULL, 0, arg_head);
+  prog_head = add_prog(SUB, COND_NC, arg_head, prog_head);
+  //SETSR  $2
+  arg_head = add_arg(REG, 2, NULL, 0, NULL);
+  prog_head = add_prog(SETSR, COND_NC, arg_head, prog_head);
+  //JMP *conditions de la macro *$1
+  arg_head = add_arg(REG, 1, NULL, 0, NULL);
+  prog_head = add_prog(JMP, macro_cond, arg_head, prog_head);
+
+
+
+  //POP H $1
+  arg_head = add_arg(REG, 1, NULL, 0, NULL);
+  arg_head = add_arg(POS, 0, NULL, POS_H, arg_head);
+  prog_head = add_prog(POP, COND_NC, arg_head, prog_head);
+  //35.POP L $1
+  arg_head = add_arg(REG, 1, NULL, 0, NULL);
+  arg_head = add_arg(POS, 0, NULL, POS_L, arg_head);
+  prog_head = add_prog(POP, COND_NC, arg_head, prog_head);
+  //36.POP L $2
   arg_head = add_arg(REG, 2, NULL, 0, NULL);
   arg_head = add_arg(POS, 0, NULL, POS_L, arg_head);
   prog_head = add_prog(POP, COND_NC, arg_head, prog_head);
@@ -480,6 +631,7 @@ Program *expand_macros(Program *prog, Labels *labels)
                                 //ou alors j'ai rien compris
     return prog;
   int val, address;
+  int val_h, val_l;
   Cond cond;
   char *ident;
   switch(prog->instr->op)
@@ -498,6 +650,14 @@ Program *expand_macros(Program *prog, Labels *labels)
       prog = insert_prog(prog, make32(val, cond));
       break;
 
+    case MAKE64:
+      val_h = prog->instr->args->previous->num;
+      val_l = prog->instr->args->num;
+      cond = prog->instr->cond;
+      prog = erase_line(prog);
+      prog = insert_prog(prog, make64(val_h, val_l, cond));
+      break;
+
     case JUMP:
       address = get_address(labels, prog->instr->args->ident);
       cond = prog->instr->cond;
@@ -507,7 +667,7 @@ Program *expand_macros(Program *prog, Labels *labels)
 	  exit(1);
 	}
       prog = erase_line(prog);
-      prog = insert_prog(prog, make32(address - count_out_lines(prog) - opcode_get_expanded_size(JUMP) + 1, COND_NC)); // CONDITION ??????????
+      prog = insert_prog(prog, make32(address - count_out_lines(prog) - opcode_get_expanded_size(JUMP) + 1, COND_NC)); // CONDITION ??????????    ???????????????,
       prog = insert_line(prog, "JMP NC $0");
       break;
     }

@@ -14,7 +14,7 @@ typedef enum {
 #define MAX_POS POS_LL
 typedef enum {
   ARGS_NUM, ARGS_REG_REG, ARGS_REG_NUM, ARGS_REG, ARGS_POS_POS_REG, ARGS_POS_POS_REG_REG, ARGS_POS_REG, ARGS_REG_POS, ARGS_EMPTY,
-  ARGS_LAB, ARGS_REG_LAB, ARGS_LAB_REG
+  ARGS_LAB, ARGS_REG_LAB, ARGS_LAB_REG, ARGS_NUM_NUM
 } ArgList;
 int opcode_get_nargs(OpCode code);
 int opcode_get_code(OpCode code);
