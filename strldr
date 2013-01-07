@@ -1,0 +1,6 @@
+MAKE NC 17
+MOVE64 NC $1,$0
+ADDI NC $1,-4
+STR NC $0,$1
+LDR NC $4,$0
+LDR NC $6,$0
