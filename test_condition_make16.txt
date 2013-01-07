@@ -1,0 +1,4 @@
+ADDI NC $0,5
+SUB NC $0,$0
+MAKE16 Z 0x0000baba
+MOVE64 $1,$0

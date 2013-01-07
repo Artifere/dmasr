@@ -696,7 +696,14 @@ Program *expand_macros(Program *prog, Labels *labels, Data *data)
 	  exit(1);
 	}
       prog = erase_line(prog);
-      prog = insert_prog(prog, make32(address - count_out_lines(prog) - opcode_get_expanded_size(JUMP) + 1, COND_NC)); // CONDITION ??????????    ???????????????,
+      prog = insert_line(prog, "PUSH NC L,$1");
+      prog = insert_line(prog, "GETSR NC $1");
+      prog = insert_line(prog, "SUB NC $0,$0");
+      prog = insert_line(prog, "ADDI NC $0,1");
+      prog = insert_line(prog, "SETSR NC $1");
+      prog = insert_prog(prog, make32(address - count_out_lines(prog) - opcode_get_expanded_size(JUMP) + 1, cond));
+      //si cond n'est pas verifiee, on a 1 dans $0 et le jmp ne fait rien
+      prog = insert_line (prog, "POP NC $1,L");
       prog = insert_line(prog, "JMP NC $0");
       break;
 

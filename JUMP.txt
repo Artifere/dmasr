@@ -1,0 +1,6 @@
+MAKE32 NC 0x0001234
+JUMP NC toto
+SUB NC $0,$0
+toto :
+MAKE32 NC 0x0000abcd
+MOVE64 NC $1,$0
