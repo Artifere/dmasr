@@ -1,0 +1,5 @@
+MAKE32 NC 0x00000bac
+STORE NC data, $0
+LOAD NC $7, data
+data:
+  0x0000bebe
