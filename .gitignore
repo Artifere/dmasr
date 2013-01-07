@@ -1,6 +1,6 @@
 # Object files
 *.o
-
+*.dep
 # Libraries
 *.lib
 *.a
@@ -14,3 +14,5 @@
 # Executables
 *.exe
 *.app
+simulateur
+assembler
