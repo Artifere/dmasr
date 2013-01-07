@@ -158,8 +158,7 @@ void execute(State *s)
     {
     case 0x0:
         *AccL &= 0xffffff00;
-        //Correction MAKE
-        *AccL += sval;
+        *AccL += v01234567;
         s->PC++;
         break;
 

@@ -1,8 +1,6 @@
 MAKE NC 3
 ADD NC $1,$0
-MAKE NC -3
+ADDI NC $0,-6
 ADD NC $1,$0
 
-#Test du ADD avec des nombres négatifs. Ne marche pas mieux que le ADDI :(
-
-#MAJ Deuxième rendu : bug corrigé, ça marche ! =) C'était le MAKE du simulateur qui était en faute en fait.
+#Test du ADD avec des nombres négatifs. Marche
