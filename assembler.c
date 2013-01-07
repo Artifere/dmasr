@@ -12,13 +12,13 @@ int get_address(Labels *labels, char *label)
     return labels->address;
   return get_address(labels->next, label);
 }
-int get_value(Program *prog, char *label)
+int get_value(Data *data, char *label)
 {
-  if(prog == NULL)
+  if(data == NULL)
     return -1;
-  if(prog->label != NULL && strcmp(prog->label, label) == 0)
-    return prog->num;
-  return get_value(prog->previous, label);
+  if(strcmp(data->label, label) == 0)
+    return data->num;
+  return get_value(data->next, label);
 }
 int count_out_lines(Program *prog)
 {
@@ -46,6 +46,28 @@ Labels *populate_labels(Program *prog)
       tmp->label = malloc((strlen(prog->label) + 1) * sizeof(char));
       strcpy(tmp->label, prog->label);
       tmp->address = count_out_lines(prog);
+      tmp->next = ret;
+      ret = tmp;
+    }
+  return ret;
+}
+
+Data *populate_data(Program *prog)
+{
+  if(prog == NULL)
+    return NULL;
+  Data *ret = populate_data(prog->previous);
+  if(prog->type == DATA &&prog->previous != NULL && prog->previous->type == LABEL)
+    {
+      if(get_value(ret, prog->previous->label) != -1)
+        {
+          printf("Label defined twice: %s\n", prog->label);
+          exit(1);
+        }
+      Data *tmp = malloc(sizeof(Data));
+      tmp->label = malloc((strlen(prog->previous->label) + 1) * sizeof(char));
+      strcpy(tmp->label, prog->previous->label);
+      tmp->num = prog->num;
       tmp->next = ret;
       ret = tmp;
     }
@@ -629,11 +651,11 @@ Program *make64(int val_h, int val_l, Cond macro_cond)
 }
 
 
-Program *expand_macros(Program *prog, Labels *labels)
+Program *expand_macros(Program *prog, Labels *labels, Data *data)
 {
   if(prog == NULL)
     return prog;
-  prog->previous = expand_macros(prog->previous, labels);
+  prog->previous = expand_macros(prog->previous, labels, data);
   if(prog->type != INSTRUCTION)
     return prog;
   int val, address;
@@ -690,7 +712,7 @@ Program *expand_macros(Program *prog, Labels *labels)
       break;
 
     case LOAD:
-      val = get_value(prog, prog->instr->args->ident);
+      val = get_value(data, prog->instr->args->ident);
       cond = prog->instr->cond;
       prog = erase_line(prog);
       prog = insert_prog(prog, make16(val, COND_NC));
@@ -853,7 +875,8 @@ int main(int argc, char **argv)
   fclose(infile);
   check_program_arglist(prog);
   Labels *labels = populate_labels(prog);
-  prog = expand_macros(prog, labels);
+  Data *data = populate_data(prog);
+  prog = expand_macros(prog, labels, data);
   //Pour ne plus perdre 1h à chercher où est l'erreur quand on envoie pas les arguments dans le bon ordre...
   check_program_arglist(prog);
   FILE *outfile = fopen(outfile_name, "w");

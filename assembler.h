@@ -3,3 +3,9 @@ typedef struct Labels {
   int address;
   struct Labels *next;
 } Labels;
+
+typedef struct Data {
+  char *label;
+  int num;
+  struct Data *next;
+} Data;

@@ -327,12 +327,12 @@ int is_line(char *line)
   else if(nwords >= 2)
     if(is_opcode(words[0]))
       if(is_cond(words[1]))
-	if(is_arguments(words[2]))
-	  return 1;
-	else
-	  printf("Should be arguments list: %s\n", words[2]);
+        if(is_arguments(words[2]))
+          return 1;
+        else
+          printf("Should be arguments list: %s\n", words[2]);
       else
-	printf("Should be condition: %s\n", words[1]);
+        printf("Should be condition: %s\n", words[1]);
     else
       printf("Should be opcode: %s\n", words[0]);
   printf("Unrecognized line: %s\n", line);
