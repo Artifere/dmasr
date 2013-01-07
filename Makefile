@@ -6,9 +6,9 @@ LFLAGS   = -lm
 CXXFLAGS =  -Wshadow -Wunreachable-code -Winline -O0 -g $(pkg-config --cflags --libs gtk+-3.0)
 
 
-all: depend exe Makefile
+all: depend assembler Makefile
 
-exe: $(OBJ) $(HDR) 
+assembler: $(OBJ) $(HDR) 
 	${CXX} $(CXXFLAGS) -o $@ $(OBJ) $(LFLAGS)  $(LIB)
 
 clean: 

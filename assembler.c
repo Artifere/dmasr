@@ -12,6 +12,14 @@ int get_address(Labels *labels, char *label)
     return labels->address;
   return get_address(labels->next, label);
 }
+int get_value(Program *prog, char *label)
+{
+  if(prog == NULL)
+    return -1;
+  if(prog->label != NULL && strcmp(prog->label, label) == 0)
+    return prog->num;
+  return get_value(prog->previous, label);
+}
 int count_out_lines(Program *prog)
 {
   if(prog == NULL)
@@ -362,8 +370,8 @@ Program *make32(int val, Cond macro_cond)
   //GETSR $2
   arg_head = add_arg(REG, 2, NULL, 0, NULL);
   prog_head = add_prog(GETSR, COND_NC, arg_head, prog_head);
-  //5.MAKE 17
-  arg_head = add_arg(NUM, 17, NULL, 0, NULL);
+  //5.MAKE 16
+  arg_head = add_arg(NUM, 16, NULL, 0, NULL);
   prog_head = add_prog(MAKE, COND_NC, arg_head, prog_head);
   //JMP $0
   arg_head = add_arg(REG, 0, NULL, 0, NULL);
@@ -432,8 +440,8 @@ Program *make32(int val, Cond macro_cond)
   arg_head = add_arg(REG, 1, NULL, 0, NULL);
   arg_head = add_arg(REG, 1, NULL, 0, arg_head);
   prog_head = add_prog(SUB, COND_NC, arg_head, prog_head);
-  //MAKE 20
-  arg_head = add_arg(NUM, 20, NULL, 0, NULL);
+  //MAKE 19
+  arg_head = add_arg(NUM, 19, NULL, 0, NULL);
   prog_head = add_prog(MAKE, COND_NC, arg_head, prog_head);
   //SUB $1 $0
   arg_head = add_arg(REG, 1, NULL, 0, NULL);
@@ -589,7 +597,7 @@ Program *make64(int val_h, int val_l, Cond macro_cond)
   arg_head = add_arg(REG, 1, NULL, 0, arg_head);
   prog_head = add_prog(SUB, COND_NC, arg_head, prog_head);
   //30.MAKE 26
-  arg_head = add_arg(NUM, 20, NULL, 0, NULL);
+  arg_head = add_arg(NUM, 26, NULL, 0, NULL);
   prog_head = add_prog(MAKE, COND_NC, arg_head, prog_head);
   //SUB $1 $0
   arg_head = add_arg(REG, 1, NULL, 0, NULL);
@@ -626,14 +634,13 @@ Program *expand_macros(Program *prog, Labels *labels)
   if(prog == NULL)
     return prog;
   prog->previous = expand_macros(prog->previous, labels);
-  if(prog->type != INSTRUCTION) //c'est pas plutot prog->type == instruction ? parce que les programs
-                                //normaux c'est ceux qui ont un type instruction non ? et les macros ont un autre type
-                                //ou alors j'ai rien compris
+  if(prog->type != INSTRUCTION)
     return prog;
   int val, address;
   int val_h, val_l;
   Cond cond;
   char *ident;
+  Arguments* arg_head;
   switch(prog->instr->op)
     {
     case MAKE16:
@@ -670,7 +677,31 @@ Program *expand_macros(Program *prog, Labels *labels)
       prog = insert_prog(prog, make32(address - count_out_lines(prog) - opcode_get_expanded_size(JUMP) + 1, COND_NC)); // CONDITION ??????????    ???????????????,
       prog = insert_line(prog, "JMP NC $0");
       break;
+
+    case CALLF:
+      address = get_address(labels, prog->instr->args->ident);
+      cond = prog->instr->cond;
+      if(address == -1)
+      {
+        printf("Unknown label: %s !\n", prog->instr->args->ident);
+        exit(1);
+      }
+      prog = erase_line(prog);                                                                    //FFFFFFFFFIIIIIIIINNNNNNNNNIIIIIIIIRRRRRRRRRRRRR!!!!!!!!!!
+      break;
+
+    case LOAD:
+      val = get_value(prog, prog->instr->args->ident);
+      cond = prog->instr->cond;
+      prog = erase_line(prog);
+      prog = insert_prog(prog, make16(val, COND_NC));
+      printf("%d", val);
+      arg_head = add_arg(REG, prog->instr->args->previous->num, NULL, 0, NULL);
+      arg_head = add_arg(REG, 0, NULL, 0, arg_head);
+      prog = add_prog(LDR, cond, arg_head, prog);
+      break;
     }
+
+
   return prog;
 }
 void write_prog(Program *prog, FILE *file)

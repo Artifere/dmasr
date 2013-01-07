@@ -1,0 +1,3 @@
+LOAD NC $7,data
+data:
+  0x0000bebe
