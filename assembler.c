@@ -708,7 +708,9 @@ Program *expand_macros(Program *prog, Labels *labels, Data *data)
         printf("Unknown label: %s !\n", prog->instr->args->ident);
         exit(1);
       }
-      prog = erase_line(prog);                                                                    //FFFFFFFFFIIIIIIIINNNNNNNNNIIIIIIIIRRRRRRRRRRRRR!!!!!!!!!!
+      prog = erase_line(prog);
+      prog = insert_prog (prog, make32(adress, COND_NC));
+      prog = insert_line (prog, "CALL NC $0");
       break;
 
     case LOAD:
@@ -721,6 +723,15 @@ Program *expand_macros(Program *prog, Labels *labels, Data *data)
       arg_head = add_arg(REG, 0, NULL, 0, arg_head);
       prog = add_prog(LDR, cond, arg_head, prog);
       break;
+
+    case STORE:
+      val = get_value(data, prog->instr->args->ident);
+      cond = prog->instr->cond;
+      prog = erase_line(prog);
+      prog = insert_prog(prog, make16(val, COND_NC));
+      arg_head = add_arg(REG, prog->instr->args->previous->num, NULL, 0, NULL);
+      arg_head = add_arg(REG, 0, NULL, 0, arg_head);
+      prog = add_prog(STR, cond, arg_head, prog);
     }
 
 
