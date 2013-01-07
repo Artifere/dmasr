@@ -1,2 +1,3 @@
 MAKE32 NC 0xcafefade
+MOVE64 NC $1,$0
 MAKE NC 7

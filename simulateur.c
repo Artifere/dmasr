@@ -275,6 +275,7 @@ void execute(State *s)
 
     case 0xb:
         *iL = set16(read_mem(s->mem, *jL), read_mem(s->mem, *jL+1));
+        printf("ldr : %X\n", *iL);
         *iH = set16(read_mem(s->mem, *jL+2), read_mem(s->mem, *jL+3));
         if (*iL == 0)
             s->SR |= 0x1;
@@ -282,6 +283,7 @@ void execute(State *s)
         break;
 
     case 0xc:
+        printf("str : %X %X\n", val16(*jL, 1), val16(*jL, 0));
         s->mem = write_mem(s->mem, *iL, val16(*jL, 1));
         s->mem = write_mem(s->mem, *iL +1, val16(*jL, 0));
         s->mem = write_mem(s->mem, *iL +2, val16(*jH, 1));
