@@ -27,6 +27,7 @@ MOVE32 H,H,$1,$0
 /*rotation d'un angle a autour de l'axe des x
 le vecteur est toujours sur le registre 1*/
 
+/*on remplit la matrice*/
 SUB $6,$6
 ADDI $6,1
 
@@ -40,9 +41,38 @@ MOVE16 LL,LL,$6
 SUB $5,$5
 MOVE64 $5,$0
 
+SUB $0,$0
 SUB $6,$6
 ADDI $6,cos(a)
 MOVE16 HL,HL,$6
 SUB $6,$6
-ADDI $6,sin(a)
+ADDI $6,(-sin(a))
 MOVE16 LH,LH,$6
+MOVE64 $3,$0
+
+SUB $0,$0
+SUB $6,$6
+ADDI $6,sin(a)
+MOVE16 HL,HL,$6
+SUB $6,$6
+ADDI $6,cos(a)
+MOVE16 LH,LH,$6
+MOVE64 $4,$0
+
+/*fin du remplissage de la matrice*/
+
+/*on fait la multiplication*/
+
+MULV16 $2,$1
+MULV16 $3,$1
+MULV16 $4,$1
+MULV16 $5,$1
+
+ADDP16 $3,$2
+MOVE32 H,L,$1,$3
+
+ADDP16 $5,$4
+MOVE32 L,L,$1,$5
+
+/*division approchee
+dans le registre 0, on */
